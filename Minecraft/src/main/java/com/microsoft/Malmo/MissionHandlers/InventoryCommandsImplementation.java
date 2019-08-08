@@ -19,33 +19,32 @@
 
 package com.microsoft.Malmo.MissionHandlers;
 
-import io.netty.buffer.ByteBuf;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import com.microsoft.Malmo.MalmoMod;
+import com.microsoft.Malmo.Schemas.InventoryCommand;
+import com.microsoft.Malmo.Schemas.InventoryCommands;
+import com.microsoft.Malmo.Schemas.MissionInit;
+
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityEnderChest;
-import net.minecraft.tileentity.TileEntityLockableLoot;
+import net.minecraft.tileentity.TileEntityLockable;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.IThreadListener;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-
-import com.microsoft.Malmo.MalmoMod;
-import com.microsoft.Malmo.MalmoMod.MalmoMessageType;
-import com.microsoft.Malmo.Schemas.InventoryCommand;
-import com.microsoft.Malmo.Schemas.InventoryCommands;
-import com.microsoft.Malmo.Schemas.MissionInit;
 
 /** Very basic control over inventory. Two commands are required: select and drop - each takes a slot.<br>
  * The effect is to swap the item stacks over - eg "select 10" followed by "drop 0" will swap the stacks
@@ -151,7 +150,7 @@ public class InventoryCommandsImplementation extends CommandGroup
         public InventoryChangeMessage onMessage(final InventoryMessage message, MessageContext ctx)
         {
             final EntityPlayerMP player = ctx.getServerHandler().playerEntity;
-            IThreadListener mainThread = (WorldServer)ctx.getServerHandler().playerEntity.world;
+            IThreadListener mainThread = (WorldServer)ctx.getServerHandler().playerEntity.worldObj;
             mainThread.addScheduledTask(new Runnable()
             {
                 @Override
@@ -214,8 +213,8 @@ public class InventoryCommandsImplementation extends CommandGroup
         String containerName = "";
         if (containerPos != null)
         {
-            TileEntity te = player.world.getTileEntity(containerPos);
-            if (te != null && te instanceof TileEntityLockableLoot)
+            TileEntity te = player.worldObj.getTileEntity(containerPos);
+            if (te != null && te instanceof TileEntityLockable)
             {
                 containerName = ObservationFromFullInventoryImplementation.getInventoryName((IInventory)te);
                 container = (IInventory)te;
@@ -260,28 +259,26 @@ public class InventoryCommandsImplementation extends CommandGroup
 
         // Check we can combine. This logic comes from InventoryPlayer.storeItemStack():
         boolean itemsMatch = dstStack.getItem() == addStack.getItem();
-        boolean dstCanStack = dstStack.isStackable() && dstStack.getCount() < dstStack.getMaxStackSize() && dstStack.getCount() < dstInv.getInventoryStackLimit();
+        boolean dstCanStack = dstStack.isStackable() && dstStack.stackSize < dstStack.getMaxStackSize() && dstStack.stackSize < dstInv.getInventoryStackLimit();
         boolean subTypesMatch = !dstStack.getHasSubtypes() || dstStack.getMetadata() == addStack.getMetadata();
         boolean tagsMatch = ItemStack.areItemStackTagsEqual(dstStack, addStack);
         if (itemsMatch && dstCanStack && subTypesMatch && tagsMatch)
         {
             // We can combine, so figure out how much we have room for:
             int limit = Math.min(dstStack.getMaxStackSize(), dstInv.getInventoryStackLimit());
-            int room = limit - dstStack.getCount();
+            int room = limit - dstStack.stackSize;
             ItemStack itemsTransferred = dstStack.copy();
-            if (addStack.getCount() > room)
+            if (addStack.stackSize > room)
             {
-                // Not room for all of it, so shift across as much as possible.
-                addStack.shrink(room);
-                dstStack.grow(room);
-                itemsTransferred.setCount(room);
+            	// Not room for all of it, so shift across as much as possible.
+                addStack.stackSize -= room;
+                dstStack.stackSize += room;
             }
             else
             {
-                // Room for the whole lot, so empty out the add slot.
-                dstStack.grow(addStack.getCount());
-                itemsTransferred.setCount(addStack.getCount());
-                addInv.removeStackFromSlot(add);//setInventorySlotContents(add, null);
+            	// Room for the whole lot, so empty out the add slot.
+                dstStack.stackSize += addStack.stackSize;
+                container.setInventorySlotContents(add, null);
             }
             if (dstInv != addInv)
             {
@@ -303,8 +300,8 @@ public class InventoryCommandsImplementation extends CommandGroup
         String containerName = "";
         if (containerPos != null)
         {
-            TileEntity te = player.world.getTileEntity(containerPos);
-            if (te != null && te instanceof TileEntityLockableLoot)
+            TileEntity te = player.worldObj.getTileEntity(containerPos);
+            if (te != null && te instanceof TileEntityChest)
             {
                 containerName = ObservationFromFullInventoryImplementation.getInventoryName((IInventory)te);
                 container = (IInventory)te;
@@ -381,7 +378,7 @@ public class InventoryCommandsImplementation extends CommandGroup
         else if (verb.equalsIgnoreCase(InventoryCommand.DISCARD_CURRENT_ITEM.value()))
         {
             // This we can do on the client side:
-            Minecraft.getMinecraft().player.dropItem(false);  // false means just drop one item - true means drop everything in the current stack.
+            Minecraft.getMinecraft().thePlayer.dropOneItem(false);  // false means just drop one item - true means drop everything in the current stack.
             return true;
         }
         return super.onExecute(verb, parameter, missionInit);
@@ -452,15 +449,15 @@ public class InventoryCommandsImplementation extends CommandGroup
         if (checkContainers)
         {
             String containerName = "";
-            RayTraceResult rtr = Minecraft.getMinecraft().objectMouseOver;
-            if (rtr != null && rtr.typeOfHit == RayTraceResult.Type.BLOCK)
+            MovingObjectPosition rtr = Minecraft.getMinecraft().objectMouseOver;
+            if (rtr != null && rtr.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
             {
                 containerPos = rtr.getBlockPos();
-                TileEntity te = Minecraft.getMinecraft().world.getTileEntity(containerPos);
-                if (te instanceof TileEntityLockableLoot)
+                TileEntity te = Minecraft.getMinecraft().theWorld.getTileEntity(containerPos);
+                if (te instanceof TileEntityLockable)
                     containerName = ObservationFromFullInventoryImplementation.getInventoryName((IInventory)te);
                 else if (te instanceof TileEntityEnderChest)
-                    containerName = ObservationFromFullInventoryImplementation.getInventoryName(Minecraft.getMinecraft().player.getInventoryEnderChest());
+                    containerName = ObservationFromFullInventoryImplementation.getInventoryName(Minecraft.getMinecraft().thePlayer.getInventoryEnderChest());
             }
             boolean containerMatches = (lhsName.equals("inventory") || lhsName.equals(containerName)) && (rhsName.equals("inventory") || rhsName.equals(containerName));
             if (!containerMatches)

@@ -427,7 +427,7 @@ public class MalmoMod
                 if (ctx.side == Side.CLIENT)
                     mainThread = Minecraft.getMinecraft();
                 else
-                    mainThread = (WorldServer)ctx.getServerHandler().playerEntity.world;
+                    mainThread = (WorldServer)ctx.getServerHandler().playerEntity.worldObj;
                 mainThread.addScheduledTask(new Runnable()
                 {
                     @Override
@@ -451,7 +451,7 @@ public class MalmoMod
     {
         // network.sendToAll() is buggy - race conditions result in the message getting trashed if there is more than one client.
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        for (Object player : server.getPlayerList().getPlayers())
+        for (Object player : server.getConfigurationManager().playerEntityList)
         {
             if (player != null && player instanceof EntityPlayerMP)
             {
@@ -470,7 +470,7 @@ public class MalmoMod
             return;
         }
         MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-        for (Object player : server.getPlayerList().getPlayers())
+        for (Object player : server.getConfigurationManager().playerEntityList)
         {
             if (player != null && player instanceof EntityPlayerMP)
             {

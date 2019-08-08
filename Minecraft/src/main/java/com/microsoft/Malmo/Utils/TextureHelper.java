@@ -27,6 +27,13 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+
+import com.microsoft.Malmo.MalmoMod;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.renderer.EntityRenderer;
@@ -34,9 +41,9 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderGlobal;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.VertexBuffer;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.ITextureObject;
 import net.minecraft.client.renderer.texture.TextureManager;
@@ -48,14 +55,6 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.IRenderHandler;
-import net.minecraftforge.fml.common.registry.EntityEntry;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-
-import com.microsoft.Malmo.MalmoMod;
 
 //Helper methods, classes etc which allow us to subvert the Minecraft render pipeline to produce
 //a colourmap image in addition to the normal Minecraft image.
@@ -77,11 +76,11 @@ public class TextureHelper
                 // Creating a colourmap requires a completely separate pass through the render pipeline
                 colourmapFrame = true;
                 // Set the sky renderer to produce a solid block of colour:
-                Minecraft.getMinecraft().world.provider.setSkyRenderer(blankSkyRenderer);
+                Minecraft.getMinecraft().theWorld.provider.setSkyRenderer(blankSkyRenderer);
                 // Render the world:
                 super.renderWorld(partialTicks, finishTimeNano);
                 // Now reset the sky renderer to default:
-                Minecraft.getMinecraft().world.provider.setSkyRenderer(null);
+                Minecraft.getMinecraft().theWorld.provider.setSkyRenderer(null);
                 colourmapFrame = false;
                 // And get the render pipeline ready to go again:
                 OpenGlHelper.glUseProgram(0);
@@ -102,16 +101,18 @@ public class TextureHelper
             super(renderEngineIn, itemRendererIn);
         }
         @Override
-        public void renderEntityStatic(Entity entityIn, float partialTicks, boolean p_188388_3_)
+        public boolean renderEntityStatic(Entity entityIn, float partialTicks, boolean p_188388_3_)
         {
+        	boolean result = false;
             if (isProducingColourMap)
             {
                 currentEntity = entityIn;
-                super.renderEntityStatic(entityIn, partialTicks, p_188388_3_);
+                result = super.renderEntityStatic(entityIn, partialTicks, p_188388_3_);
                 currentEntity = null;
+                return result;
             }
             else
-                super.renderEntityStatic(entityIn, partialTicks, p_188388_3_);
+                return super.renderEntityStatic(entityIn, partialTicks, p_188388_3_);
         }
     }
 
@@ -139,7 +140,7 @@ public class TextureHelper
             GlStateManager.depthMask(false);
             GlStateManager.disableTexture2D();
             Tessellator tessellator = Tessellator.getInstance();
-            VertexBuffer vertexbuffer = tessellator.getBuffer();
+            WorldRenderer vertexbuffer = tessellator.getWorldRenderer();
 
             for (int i = 0; i < 6; ++i)
             {
@@ -284,7 +285,7 @@ public class TextureHelper
                         {
                             // Yes, in which case use black unless a mapping is found:
                             col = 0;
-                            String entName = EntityList.getKey(currentEntity).toString();
+                            String entName = String.valueOf(EntityList.getEntityID(currentEntity));
                             for (String ent : idealMobColours.keySet())
                             {
                                 if (entName.equals(ent))
@@ -418,18 +419,7 @@ public class TextureHelper
             String id = null;
             for (String oldname : mobColours.keySet())
             {
-                for (EntityEntry ent : net.minecraftforge.fml.common.registry.ForgeRegistries.ENTITIES)
-                {
-                   if (ent.getName().equals(oldname))
-                   {
-                       id = ent.getRegistryName().toString();
-                       break;
-                   }
-                }
-                if (id != null)
-                {
-                    idealMobColours.put(id, mobColours.get(oldname));
-                }
+                idealMobColours.put(id, mobColours.get(oldname));
             }
         }
         texturesToColours.clear();

@@ -29,10 +29,10 @@ import com.microsoft.Malmo.MissionHandlerInterfaces.IObservationProducer;
 import com.microsoft.Malmo.Schemas.MissionInit;
 import com.microsoft.Malmo.Utils.ScreenHelper;
 
+import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.util.text.TextFormatting;
 
 public class ObservationFromChatImplementation extends HandlerBase implements IObservationProducer
 {
@@ -98,14 +98,14 @@ public class ObservationFromChatImplementation extends HandlerBase implements IO
     public void onTitleChange(ScreenHelper.TitleChangeEvent event)
     {
         if (event.title != null)
-            this.chatMessagesReceived.add(new ChatMessage(TITLE_TYPE, TextFormatting.getTextWithoutFormattingCodes(event.title)));
+            this.chatMessagesReceived.add(new ChatMessage(TITLE_TYPE, EnumChatFormatting.getTextWithoutFormattingCodes(event.title)));
         if (event.subtitle != null)
-            this.chatMessagesReceived.add(new ChatMessage(SUBTITLE_TYPE, TextFormatting.getTextWithoutFormattingCodes(event.subtitle)));
+            this.chatMessagesReceived.add(new ChatMessage(SUBTITLE_TYPE, EnumChatFormatting.getTextWithoutFormattingCodes(event.subtitle)));
     }
 
     @SubscribeEvent
     public void onEvent(ClientChatReceivedEvent event)
     {
-        this.chatMessagesReceived.add(new ChatMessage(CHAT_TYPE, event.getMessage().getUnformattedText()));
+        this.chatMessagesReceived.add(new ChatMessage(CHAT_TYPE, event.message.getUnformattedText()));
     }
 }

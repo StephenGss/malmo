@@ -22,17 +22,17 @@ package com.microsoft.Malmo.MissionHandlers;
 import java.io.File;
 import java.util.List;
 
+import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldGenerator;
+import com.microsoft.Malmo.Schemas.FileWorldGenerator;
+import com.microsoft.Malmo.Schemas.MissionInit;
+import com.microsoft.Malmo.Utils.MapFileHelper;
+
 import net.minecraft.client.AnvilConverterException;
 import net.minecraft.client.Minecraft;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.ISaveFormat;
-import net.minecraft.world.storage.WorldSummary;
-
-import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldGenerator;
-import com.microsoft.Malmo.Schemas.FileWorldGenerator;
-import com.microsoft.Malmo.Schemas.MissionInit;
-import com.microsoft.Malmo.Utils.MapFileHelper;
+import net.minecraft.world.storage.SaveFormatComparator;
 
 public class FileWorldGeneratorImplementation extends HandlerBase implements IWorldGenerator
 {
@@ -83,7 +83,7 @@ public class FileWorldGeneratorImplementation extends HandlerBase implements IWo
         }
 
         ISaveFormat isaveformat = Minecraft.getMinecraft().getSaveLoader();
-        List<WorldSummary> worldlist;
+        List<SaveFormatComparator> worldlist;
         try
         {
             worldlist = isaveformat.getSaveList();
@@ -94,8 +94,8 @@ public class FileWorldGeneratorImplementation extends HandlerBase implements IWo
             return false;
         }
 
-        WorldSummary newWorld = null;
-        for (WorldSummary ws : worldlist)
+        SaveFormatComparator newWorld = null;
+        for (SaveFormatComparator ws : worldlist)
         {
             if (ws.getFileName().equals(mapCopy.getName()))
                 newWorld = ws;
@@ -106,7 +106,7 @@ public class FileWorldGeneratorImplementation extends HandlerBase implements IWo
             return false;
         }
 
-        net.minecraftforge.fml.client.FMLClientHandler.instance().tryLoadExistingWorld(null, newWorld);
+        net.minecraftforge.fml.client.FMLClientHandler.instance().tryLoadExistingWorld(null, newWorld.getFileName(), newWorld.getDisplayName());	//TODO: Check this change
         IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
         String worldName = (server != null) ? server.getWorldName() : null;
         if (worldName == null || !worldName.equals(newWorld.getDisplayName()))
@@ -131,7 +131,7 @@ public class FileWorldGeneratorImplementation extends HandlerBase implements IWo
         // Extract the name from the path (need to cope with backslashes or forward slashes.)
         String mapfile = (this.mapFilename == null) ? "" : this.mapFilename;    // Makes no sense to have an empty filename, but createWorld will deal with it graciously.
         String[] parts = mapfile.split("[\\\\/]");
-        if (name.length() > 0 && parts[parts.length - 1].equalsIgnoreCase(name) && Minecraft.getMinecraft().world != null)
+        if (name.length() > 0 && parts[parts.length - 1].equalsIgnoreCase(name) && Minecraft.getMinecraft().theWorld != null)
             return false;	// We don't check whether the game modes match - it's up to the server state machine to sort that out.
 
         return true;	// There's no world, or the world is different to the basemap file, so create.

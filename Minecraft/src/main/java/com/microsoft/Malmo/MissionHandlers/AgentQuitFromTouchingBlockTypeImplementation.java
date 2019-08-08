@@ -22,25 +22,24 @@ package com.microsoft.Malmo.MissionHandlers;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.microsoft.Malmo.MissionHandlerInterfaces.IWantToQuit;
+import com.microsoft.Malmo.Schemas.AgentQuitFromTouchingBlockType;
+import com.microsoft.Malmo.Schemas.BlockSpec;
+import com.microsoft.Malmo.Schemas.BlockSpecWithDescription;
+import com.microsoft.Malmo.Schemas.BlockType;
+import com.microsoft.Malmo.Schemas.Colour;
+import com.microsoft.Malmo.Schemas.MissionInit;
+import com.microsoft.Malmo.Schemas.Variation;
+import com.microsoft.Malmo.Utils.PositionHelper;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-import com.microsoft.Malmo.MissionHandlerInterfaces.IWantToQuit;
-import com.microsoft.Malmo.MissionHandlers.RewardForCollectingItemImplementation.GainItemEvent;
-import com.microsoft.Malmo.Schemas.AgentQuitFromTouchingBlockType;
-import com.microsoft.Malmo.Schemas.BlockSpec;
-import com.microsoft.Malmo.Schemas.BlockSpecWithDescription;
-import com.microsoft.Malmo.Schemas.BlockType;
-import com.microsoft.Malmo.Schemas.Variation;
-import com.microsoft.Malmo.Schemas.Colour;
-import com.microsoft.Malmo.Schemas.MissionInit;
-import com.microsoft.Malmo.Utils.PositionHelper;
 
 public class AgentQuitFromTouchingBlockTypeImplementation extends HandlerBase implements IWantToQuit
 {
@@ -81,11 +80,11 @@ public class AgentQuitFromTouchingBlockTypeImplementation extends HandlerBase im
 	    if (this.wantToQuit)
 	        return true;
 	    
-		EntityPlayerSP player = Minecraft.getMinecraft().player;
+		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         List<BlockPos> touchingBlocks = PositionHelper.getTouchingBlocks(player);
         for (BlockPos pos : touchingBlocks)
         {
-        	IBlockState bs = player.world.getBlockState(pos);
+        	IBlockState bs = player.worldObj.getBlockState(pos);
         	// Does this block match our trigger specs?
         	String blockname = bs.getBlock().getUnlocalizedName().toLowerCase();
         	if (!this.blockTypeNames.contains(blockname))

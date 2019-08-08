@@ -101,7 +101,7 @@ public class CommandForWheeledRobotNavigationImplementation extends CommandBase
 
     private void init()
     {
-    	EntityPlayerSP player = Minecraft.getMinecraft().player;
+    	EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
     	this.mVelocity = 0;
         this.mTargetVelocity = 0;
         this.mTicksSinceLastVelocityChange = 0;
@@ -195,7 +195,7 @@ public class CommandForWheeledRobotNavigationImplementation extends CommandBase
         mCameraPitch = (mCameraPitch < -90) ? -90 : (mCameraPitch > 90 ? 90 : mCameraPitch);    // Clamp to [-90, 90]
 
         // And update the player:
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player != null)
         {
             player.rotationPitch = this.mCameraPitch;
@@ -311,7 +311,7 @@ public class CommandForWheeledRobotNavigationImplementation extends CommandBase
     {
         // Create our movement hook, which allows us to override the Minecraft movement.
         this.overrideMovement = new MovementHook(Minecraft.getMinecraft().gameSettings);
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player != null)
         {
             // Insert it into the player, keeping a record of the original movement object
@@ -327,7 +327,7 @@ public class CommandForWheeledRobotNavigationImplementation extends CommandBase
     public void deinstall(MissionInit missionInit)
     {
         // Restore the player's normal movement control:
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player != null)
         {
             player.movementInput = this.originalMovement;

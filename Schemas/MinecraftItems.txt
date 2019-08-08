@@ -186,3 +186,4 @@ record_strad
 record_ward
 record_11
 record_wait
+polycraft:diamond_pogo_stick

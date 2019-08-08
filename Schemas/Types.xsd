@@ -269,6 +269,7 @@
         <xs:enumeration value="record_ward" />
         <xs:enumeration value="record_11" />
         <xs:enumeration value="record_wait" />
+		<xs:enumeration value="polycraft:diamond_pogo_stick" />
     </xs:restriction>
 </xs:simpleType>
 

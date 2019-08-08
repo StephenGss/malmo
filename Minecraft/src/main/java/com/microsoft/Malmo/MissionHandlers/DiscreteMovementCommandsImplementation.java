@@ -19,28 +19,33 @@
 
 package com.microsoft.Malmo.MissionHandlers;
 
+import com.microsoft.Malmo.MalmoMod;
+import com.microsoft.Malmo.MissionHandlerInterfaces.ICommandHandler;
+import com.microsoft.Malmo.Schemas.DiscreteMovementCommand;
+import com.microsoft.Malmo.Schemas.DiscreteMovementCommands;
+import com.microsoft.Malmo.Schemas.MissionInit;
+
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -48,12 +53,6 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
-
-import com.microsoft.Malmo.MalmoMod;
-import com.microsoft.Malmo.MissionHandlerInterfaces.ICommandHandler;
-import com.microsoft.Malmo.Schemas.DiscreteMovementCommand;
-import com.microsoft.Malmo.Schemas.DiscreteMovementCommands;
-import com.microsoft.Malmo.Schemas.MissionInit;
 
 /**
  * Fairly dumb command handler that attempts to move the player one block N,S,E
@@ -86,13 +85,13 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
         public ItemStack itemStack;
         public EnumFacing face;
         public boolean standOnPlacedBlock;
-        public Vec3d hitVec;
+        public Vec3 hitVec;
 
         public UseActionMessage()
         {
         }
 
-        public UseActionMessage(BlockPos pos, ItemStack itemStack, EnumFacing face, boolean standOnPlacedBlock, Vec3d hitVec)
+        public UseActionMessage(BlockPos pos, ItemStack itemStack, EnumFacing face, boolean standOnPlacedBlock, Vec3 hitVec)
         {
             this.pos = pos;
             this.itemStack = itemStack;
@@ -108,7 +107,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
             this.itemStack = ByteBufUtils.readItemStack(buf);
             this.face = EnumFacing.values()[buf.readInt()];
             this.standOnPlacedBlock = buf.readBoolean();
-            this.hitVec = new Vec3d(buf.readDouble(), buf.readDouble(), buf.readDouble());
+            this.hitVec = new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble());
         }
 
         @Override
@@ -132,35 +131,37 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
         public IMessage onMessage(final UseActionMessage message, final MessageContext ctx)
         {
             IThreadListener mainThread = null;
-            if (ctx.side == Side.CLIENT)
+            if (ctx.side == Side.CLIENT) {
+            	KeyBinding.onTick(Minecraft.getMinecraft().gameSettings.keyBindUseItem.getKeyCode());
                 return null;    // Not interested.
+            }
 
-            mainThread = (WorldServer)ctx.getServerHandler().playerEntity.world;
+            mainThread = (WorldServer)ctx.getServerHandler().playerEntity.worldObj;
             mainThread.addScheduledTask(new Runnable()
             {
                 @Override
                 public void run()
                 {
                     EntityPlayerMP player = ctx.getServerHandler().playerEntity;
-                    PlayerInteractEvent event = new PlayerInteractEvent.RightClickBlock(player, EnumHand.MAIN_HAND, message.pos, message.face, message.hitVec);
+                    PlayerInteractEvent event = new PlayerInteractEvent(player, Action.RIGHT_CLICK_BLOCK, message.pos, message.face, player.worldObj, message.hitVec);
                     MinecraftForge.EVENT_BUS.post(event);
                     if (!event.isCanceled()) {
                         BlockPos pos = message.pos.add( message.face.getDirectionVec() );
                         Block b = Block.getBlockFromItem( message.itemStack.getItem() );
                         if( b != null ) {
                             IBlockState blockType = b.getStateFromMeta( message.itemStack.getMetadata() );
-                            if (player.world.setBlockState( pos, blockType ))
+                            if (player.worldObj.setBlockState( pos, blockType ))
                             {
-                                BlockSnapshot snapshot = new BlockSnapshot(player.world, pos, blockType);
-                                BlockEvent.PlaceEvent placeevent = new BlockEvent.PlaceEvent(snapshot, player.world.getBlockState(message.pos), player);
+                                BlockSnapshot snapshot = new BlockSnapshot(player.worldObj, pos, blockType);
+                                BlockEvent.PlaceEvent placeevent = new BlockEvent.PlaceEvent(snapshot, player.worldObj.getBlockState(message.pos), player);
                                 MinecraftForge.EVENT_BUS.post(placeevent);
                                 // We set the block, so remove it from the inventory.
-                                if (!player.isCreative())
+                                if (!player.capabilities.isCreativeMode)
                                 {
-                                    if (player.inventory.getCurrentItem().getCount() > 1)
-                                        player.inventory.getCurrentItem().setCount(player.inventory.getCurrentItem().getCount() - 1);
+                                    if (player.inventory.getCurrentItem().stackSize > 1)
+                                        player.inventory.getCurrentItem().stackSize = (player.inventory.getCurrentItem().stackSize - 1);
                                     else
-                                        player.inventory.mainInventory.get(player.inventory.currentItem).setCount(0);
+                                        player.inventory.mainInventory[player.inventory.currentItem].stackSize = (0);
                                 }
                                 if (message.standOnPlacedBlock)
                                 {
@@ -181,12 +182,12 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
     {
         public BlockPos pos;
         public EnumFacing face;
-        public Vec3d hitVec;
+        public Vec3 hitVec;
         public AttackActionMessage()
         {
         }
 
-        public AttackActionMessage(BlockPos hitPos, EnumFacing face, Vec3d hitVec)
+        public AttackActionMessage(BlockPos hitPos, EnumFacing face, Vec3 hitVec)
         {
             this.pos = hitPos;
             this.face = face;
@@ -198,7 +199,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
         {
             this.pos = new BlockPos( buf.readInt(), buf.readInt(), buf.readInt() );
             this.face = EnumFacing.values()[buf.readInt()];
-            this.hitVec = new Vec3d(buf.readDouble(), buf.readDouble(), buf.readDouble() );
+            this.hitVec = new Vec3(buf.readDouble(), buf.readDouble(), buf.readDouble() );
         }
 
         @Override
@@ -223,18 +224,18 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
             if (ctx.side == Side.CLIENT)
                 return null;    // Not interested.
 
-            mainThread = (WorldServer)ctx.getServerHandler().playerEntity.world;
+            mainThread = (WorldServer)ctx.getServerHandler().playerEntity.worldObj;
             mainThread.addScheduledTask(new Runnable()
             {
                 @Override
                 public void run()
                 {
                     EntityPlayerMP player = ctx.getServerHandler().playerEntity;
-                    IBlockState iblockstate = player.world.getBlockState(message.pos);
+                    IBlockState iblockstate = player.worldObj.getBlockState(message.pos);
                     Block block = iblockstate.getBlock();
-                    if (iblockstate.getMaterial() != Material.AIR)
+                    if (iblockstate.getBlock().getMaterial() != Material.air)
                     {
-                        PlayerInteractEvent event = new PlayerInteractEvent.LeftClickBlock(player, message.pos, message.face, message.hitVec);
+                        PlayerInteractEvent event = new PlayerInteractEvent(player, Action.LEFT_CLICK_BLOCK, message.pos, message.face, player.worldObj, message.hitVec);
                         MinecraftForge.EVENT_BUS.post(event);
                         if (!event.isCanceled())
                         {
@@ -242,15 +243,15 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                             // We do things this way, rather than pass true for dropBlock in world.destroyBlock,
                             // because we want this to take instant effect - we don't want the intermediate stage
                             // of spawning a free-floating item that the player must pick up.
-                            java.util.List<ItemStack> items = block.getDrops(player.world, message.pos, iblockstate, 0);
-                            player.world.destroyBlock( message.pos, dropBlock );
+                            java.util.List<ItemStack> items = block.getDrops(player.worldObj, message.pos, iblockstate, 0);
+                            player.worldObj.destroyBlock( message.pos, dropBlock );
                             for (ItemStack item : items)
                             {
                                 if (!player.inventory.addItemStackToInventory(item)) {
-                                   Block.spawnAsEntity(player.world, message.pos, item); // Didn't fit in inventory, so spawn it.
+                                   Block.spawnAsEntity(player.worldObj, message.pos, item); // Didn't fit in inventory, so spawn it.
                                 }
                             }
-                            BlockEvent.BreakEvent breakevent = new BlockEvent.BreakEvent(player.world, message.pos, iblockstate, player);
+                            BlockEvent.BreakEvent breakevent = new BlockEvent.BreakEvent(player.worldObj, message.pos, iblockstate, player);
                             MinecraftForge.EVENT_BUS.post(breakevent);
                         }
                     }
@@ -292,7 +293,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
     protected boolean onExecute(String verb, String parameter, MissionInit missionInit)
     {
         boolean handled = false;
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player != null)
         {
             int z = 0;
@@ -378,17 +379,17 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                 break;
             case ATTACK:
                 {
-                    RayTraceResult mop = Minecraft.getMinecraft().objectMouseOver;
-                    if( mop.typeOfHit == RayTraceResult.Type.BLOCK ) {
+                    MovingObjectPosition mop = Minecraft.getMinecraft().objectMouseOver;
+                    if( mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK ) {
                         BlockPos hitPos = mop.getBlockPos();
                         EnumFacing face = mop.sideHit;
-                        IBlockState iblockstate = player.world.getBlockState(hitPos);
+                        IBlockState iblockstate = player.worldObj.getBlockState(hitPos);
                         Block block = iblockstate.getBlock();
-                        if (iblockstate.getMaterial() != Material.AIR)
+                        if (iblockstate.getBlock().getMaterial() != Material.air)
                         {
                             MalmoMod.network.sendToServer(new AttackActionMessage(hitPos, face, mop.hitVec));
                             // Trigger a reward for collecting the block
-                            java.util.List<ItemStack> items = block.getDrops(player.world, hitPos, iblockstate, 0);
+                            java.util.List<ItemStack> items = block.getDrops(player.worldObj, hitPos, iblockstate, 0);
                             for (ItemStack item : items)
                             {
                                 RewardForCollectingItemImplementation.GainItemEvent event = new RewardForCollectingItemImplementation.GainItemEvent(item);
@@ -402,8 +403,8 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
             case USE:
             case JUMPUSE:
                 {
-                	RayTraceResult mop = getObjectMouseOver(command);
-                    if( mop.typeOfHit == RayTraceResult.Type.BLOCK )
+                	MovingObjectPosition mop = getObjectMouseOver(command);
+                    if( mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK )
                     {
                         if( player.inventory.getCurrentItem() != null ) {
                             ItemStack itemStack = player.inventory.getCurrentItem();
@@ -411,14 +412,16 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                             if( b != null ) {
                                 BlockPos pos = mop.getBlockPos().add( mop.sideHit.getDirectionVec() );
                                 // Can we place this block here?
-                                AxisAlignedBB axisalignedbb = b.getDefaultState().getCollisionBoundingBox(player.world, pos);
+                                AxisAlignedBB axisalignedbb = b.getDefaultState().getBlock().getCollisionBoundingBox(player.worldObj, pos, b.getDefaultState());
                                 Entity exceptedEntity = (command == DiscreteMovementCommand.USE) ? null : player;
                                 // (Not ideal, but needed by jump-use to allow the player to place a block where their feet would be.)
-                                if (axisalignedbb == null || player.world.checkNoEntityCollision(axisalignedbb.offset(pos), exceptedEntity))
+                                if (axisalignedbb == null || player.worldObj.checkNoEntityCollision(axisalignedbb.offset(pos.getX(), pos.getY(), pos.getZ()), exceptedEntity))
                                 {
                                     boolean standOnBlockPlaced = (command == DiscreteMovementCommand.JUMPUSE && mop.getBlockPos().equals(new BlockPos(player.posX, player.posY - 1, player.posZ)));
                                     MalmoMod.network.sendToServer(new UseActionMessage(mop.getBlockPos(), itemStack, mop.sideHit, standOnBlockPlaced, mop.hitVec));
                                 }
+                            }else {
+                            	MalmoMod.network.sendToServer(new UseActionMessage(mop.getBlockPos(), itemStack, mop.sideHit, false, mop.hitVec));
                             }
                         }
                     }
@@ -443,7 +446,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
             if (this.params.isAutoJump() && y == 0 && (z != 0 || x != 0))
             {
                 // Do we need to jump?
-                if (!player.world.getCollisionBoxes(player, player.getEntityBoundingBox().offset(x, 0, z)).isEmpty())
+                if (!player.worldObj.getCollidingBoundingBoxes(player, player.getEntityBoundingBox().offset(x, 0, z)).isEmpty())
                     y = 1;
             }
 
@@ -452,7 +455,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                 // Attempt to move the entity:
                 double oldX = player.posX;
                 double oldZ = player.posZ;
-                player.move(MoverType.SELF, (double)x, (double)y, (double)z);
+                player.moveEntity((double)x, (double)y, (double)z);
                 player.onUpdate();
                 if (this.params.isAutoFall())
                 {
@@ -462,7 +465,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                     while (!player.onGround && !player.capabilities.isFlying && bailCountdown > 0)
                     {
                         // Fast-forward downwards.
-                        player.move(MoverType.SELF, 0.0, Math.floor(player.posY-0.0000001) - player.posY, 0.0);
+                        player.moveEntity(0.0, Math.floor(player.posY-0.0000001) - player.posY, 0.0);
                         player.onUpdate();
                         bailCountdown--;
                     }
@@ -490,7 +493,7 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
                     DiscretePartialMoveEvent event = new DiscretePartialMoveEvent(player.posX, player.posY, player.posZ);
                     MinecraftForge.EVENT_BUS.post(event);
                     // Now adjust the player:
-                    player.move(MoverType.SELF, oldX - newX, 0.0, oldZ - newZ);
+                    player.moveEntity(oldX - newX, 0.0, oldZ - newZ);
                     player.onUpdate();
                 }
                 // Now set the last tick pos values, to turn off inter-tick positional interpolation:
@@ -513,21 +516,21 @@ public class DiscreteMovementCommandsImplementation extends CommandBase implemen
         return handled;
     }
 
-    private RayTraceResult getObjectMouseOver(DiscreteMovementCommand command)
+    private MovingObjectPosition getObjectMouseOver(DiscreteMovementCommand command)
     {
-        RayTraceResult mop = null;
+    	MovingObjectPosition mop = null;
         if (command.equals(DiscreteMovementCommand.USE))
             mop = Minecraft.getMinecraft().objectMouseOver;
         else if (command.equals(DiscreteMovementCommand.JUMPUSE))
         {
             long partialTicks = 0;  //Minecraft.timer.renderPartialTicks
-            Entity viewer = Minecraft.getMinecraft().player;
+            Entity viewer = Minecraft.getMinecraft().thePlayer;
             double blockReach = Minecraft.getMinecraft().playerController.getBlockReachDistance();
-            Vec3d eyePos = viewer.getPositionEyes(partialTicks);
-            Vec3d lookVec = viewer.getLook(partialTicks);
+            Vec3 eyePos = viewer.getPositionEyes(partialTicks);
+            Vec3 lookVec = viewer.getLook(partialTicks);
             int yOffset = 1;    // For the jump
-            Vec3d searchVec = eyePos.addVector(lookVec.xCoord * blockReach, yOffset + lookVec.yCoord * blockReach, lookVec.zCoord * blockReach);
-            mop = Minecraft.getMinecraft().world.rayTraceBlocks(eyePos, searchVec, false, false, false);
+            Vec3 searchVec = eyePos.addVector(lookVec.xCoord * blockReach, yOffset + lookVec.yCoord * blockReach, lookVec.zCoord * blockReach);
+            mop = Minecraft.getMinecraft().theWorld.rayTraceBlocks(eyePos, searchVec, false, false, false);
         }
         return mop;
     }

@@ -22,15 +22,15 @@ package com.microsoft.Malmo.MissionHandlers;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-
 import com.microsoft.Malmo.MalmoMod;
 import com.microsoft.Malmo.MalmoMod.MalmoMessageType;
 import com.microsoft.Malmo.Schemas.MissionInit;
 import com.microsoft.Malmo.Schemas.ServerQuitFromTimeUp;
+import com.mojang.realmsclient.gui.ChatFormatting;
+
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 /** IWantToQuit object that returns true when a certain amount of time has elapsed.<br>
  * This object also draws a cheeky countdown on the Minecraft Chat HUD.
@@ -66,9 +66,9 @@ public class ServerQuitFromTimeUpImplementation extends QuitFromTimeUpBase
 	{
 		Map<String, String> data = new HashMap<String, String>();
 		
-        String text = TextFormatting.BOLD + "" + secondsRemaining + "...";
+        String text = ChatFormatting.BOLD + "" + secondsRemaining + "...";
         if (secondsRemaining <= 5)
-            text = TextFormatting.RED + text;
+            text = ChatFormatting.RED + text;
 
 		data.put("chat", text);
 		MalmoMod.safeSendToAll(MalmoMessageType.SERVER_TEXT, data);

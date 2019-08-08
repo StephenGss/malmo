@@ -38,6 +38,6 @@ public class ObservationFromHotBarImplementation extends HandlerBase implements 
 	@Override
     public void writeObservationsToJSON(JsonObject json, MissionInit missionInit)
     {
-        ObservationFromFullInventoryImplementation.getInventoryJSON(json, "Hotbar_", Minecraft.getMinecraft().player.inventory, 9);
+        ObservationFromFullInventoryImplementation.getInventoryJSON(json, "Hotbar_", Minecraft.getMinecraft().thePlayer.inventory, 9);
     }
 }

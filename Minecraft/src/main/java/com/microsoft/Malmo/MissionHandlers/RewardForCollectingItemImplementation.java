@@ -97,10 +97,10 @@ public class RewardForCollectingItemImplementation extends RewardForItemBase imp
     @SubscribeEvent
     public void onPickupItem(EntityItemPickupEvent event)
     {
-        if (event.getItem() != null && event.getEntityPlayer() instanceof EntityPlayerMP )
+        if (event.item != null && event.entityPlayer instanceof EntityPlayerMP )
         {
             // This event is received on the server side, so we need to pass it to the client.
-            sendItemStackToClient((EntityPlayerMP)event.getEntityPlayer(), MalmoMessageType.SERVER_COLLECTITEM, event.getItem().getEntityItem());
+            sendItemStackToClient((EntityPlayerMP)event.entityPlayer, MalmoMessageType.SERVER_COLLECTITEM, event.item.getEntityItem());
         }
     }
 

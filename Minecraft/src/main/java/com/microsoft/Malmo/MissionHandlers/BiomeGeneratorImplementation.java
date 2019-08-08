@@ -21,10 +21,15 @@ package com.microsoft.Malmo.MissionHandlers;
 
 import java.util.Random;
 
+import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldGenerator;
+import com.microsoft.Malmo.Schemas.BiomeGenerator;
+import com.microsoft.Malmo.Schemas.MissionInit;
+import com.microsoft.Malmo.Utils.MapFileHelper;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldSettings;
-import net.minecraft.world.GameType;
+import net.minecraft.world.WorldSettings.GameType;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.gen.layer.GenLayer;
 import net.minecraft.world.gen.layer.IntCache;
@@ -32,11 +37,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldGenerator;
-import com.microsoft.Malmo.Schemas.BiomeGenerator;
-import com.microsoft.Malmo.Schemas.MissionInit;
-import com.microsoft.Malmo.Utils.MapFileHelper;
 
 /**
  * Generates a survival world of only the biome specified.
@@ -89,7 +89,7 @@ public class BiomeGeneratorImplementation extends HandlerBase implements IWorldG
 		GenLayer[] replacement = new GenLayer[2];
 		replacement[0] = new GenLayerConstant(bparams.getBiome());
 		replacement[1] = replacement[0];
-		event.setNewBiomeGens(replacement);
+		event.newBiomeGens = replacement;	//TODO: Check if this is correct
 	}
 
 	@Override
@@ -111,8 +111,8 @@ public class BiomeGeneratorImplementation extends HandlerBase implements IWorldG
 	@Override
 	public boolean createWorld(MissionInit missionInit) {
 		long seed = getWorldSeedFromString();
-		WorldType.WORLD_TYPES[0].onGUICreateWorldPress();
-		WorldSettings worldsettings = new WorldSettings(seed, GameType.SURVIVAL, true, false, WorldType.WORLD_TYPES[0]);
+		WorldType.worldTypes[0].onGUICreateWorldPress();
+		WorldSettings worldsettings = new WorldSettings(seed, GameType.SURVIVAL, true, false, WorldType.worldTypes[0]);
 		worldsettings.enableCommands();
 		// Create a filename for this map - we use the time stamp to make sure
 		// it is different from other worlds, otherwise no new world
@@ -125,7 +125,7 @@ public class BiomeGeneratorImplementation extends HandlerBase implements IWorldG
 		if (this.bparams != null && this.bparams.isForceReset())
 			return true;
 
-		if (Minecraft.getMinecraft().world == null || world == null)
+		if (Minecraft.getMinecraft().theWorld == null || world == null)
 			return true; // Definitely need to create a world if there isn't one
 		                 // in existence!
 

@@ -265,12 +265,12 @@ public class VideoHook {
         if (colourmapFrame != colourmapVideoProducer)
             return;
 
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
-        float x = (float) (player.lastTickPosX + (player.posX - player.lastTickPosX) * event.getPartialTicks());
-        float y = (float) (player.lastTickPosY + (player.posY - player.lastTickPosY) * event.getPartialTicks());
-        float z = (float) (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.getPartialTicks());
-        float yaw = player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw) * event.getPartialTicks();
-        float pitch = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * event.getPartialTicks();
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        float x = (float) (player.lastTickPosX + (player.posX - player.lastTickPosX) * event.partialTicks);
+        float y = (float) (player.lastTickPosY + (player.posY - player.lastTickPosY) * event.partialTicks);
+        float z = (float) (player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * event.partialTicks);
+        float yaw = player.prevRotationYaw + (player.rotationYaw - player.prevRotationYaw) * event.partialTicks;
+        float pitch = player.prevRotationPitch + (player.rotationPitch - player.prevRotationPitch) * event.partialTicks;
 
         long time_before_ns = System.nanoTime();
 

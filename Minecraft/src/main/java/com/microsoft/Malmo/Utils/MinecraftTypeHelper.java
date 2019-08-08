@@ -24,6 +24,20 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import com.microsoft.Malmo.Schemas.BlockType;
+import com.microsoft.Malmo.Schemas.Colour;
+import com.microsoft.Malmo.Schemas.DrawBlock;
+import com.microsoft.Malmo.Schemas.DrawItem;
+import com.microsoft.Malmo.Schemas.EntityTypes;
+import com.microsoft.Malmo.Schemas.Facing;
+import com.microsoft.Malmo.Schemas.FlowerTypes;
+import com.microsoft.Malmo.Schemas.HalfTypes;
+import com.microsoft.Malmo.Schemas.MonsterEggTypes;
+import com.microsoft.Malmo.Schemas.ShapeTypes;
+import com.microsoft.Malmo.Schemas.StoneTypes;
+import com.microsoft.Malmo.Schemas.Variation;
+import com.microsoft.Malmo.Schemas.WoodTypes;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockAir;
 import net.minecraft.block.BlockLever.EnumOrientation;
@@ -38,22 +52,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemMonsterPlacer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
-
-import com.microsoft.Malmo.Schemas.BlockType;
-import com.microsoft.Malmo.Schemas.Colour;
-import com.microsoft.Malmo.Schemas.DrawBlock;
-import com.microsoft.Malmo.Schemas.DrawItem;
-import com.microsoft.Malmo.Schemas.EntityTypes;
-import com.microsoft.Malmo.Schemas.Facing;
-import com.microsoft.Malmo.Schemas.FlowerTypes;
-import com.microsoft.Malmo.Schemas.HalfTypes;
-import com.microsoft.Malmo.Schemas.MonsterEggTypes;
-import com.microsoft.Malmo.Schemas.ShapeTypes;
-import com.microsoft.Malmo.Schemas.StoneTypes;
-import com.microsoft.Malmo.Schemas.Variation;
-import com.microsoft.Malmo.Schemas.WoodTypes;
 
 /**
  *  Utility functions for dealing with Minecraft block types, item types, etc.
@@ -69,7 +68,7 @@ public class MinecraftTypeHelper
     {
         if( s == null )
             return null; 
-        Block block = (Block)Block.REGISTRY.getObject(new ResourceLocation( s ));
+        Block block = (Block)Block.blockRegistry.getObject(new ResourceLocation( s ));
         if( block instanceof BlockAir && !s.equals("air") ) // Minecraft returns BlockAir when it doesn't recognise the string
             return null; // unrecognised string
         return block.getDefaultState();
@@ -85,7 +84,7 @@ public class MinecraftTypeHelper
     {
         if (s == null)
             return null;
-        Item item = (Item)Item.REGISTRY.getObject(new ResourceLocation(s)); // Minecraft returns null when it doesn't recognise the string
+        Item item = (Item)Item.itemRegistry.getObject(new ResourceLocation(s)); // Minecraft returns null when it doesn't recognise the string
         if (item == null && checkBlocks)
         {
             // Maybe this is a request for a block item?
@@ -320,7 +319,7 @@ public class MinecraftTypeHelper
             return null;
 
         DrawBlock block = new DrawBlock();
-        Object blockName = Block.REGISTRY.getNameForObject(state.getBlock());
+        Object blockName = Block.blockRegistry.getNameForObject(state.getBlock());
         if (blockName instanceof ResourceLocation)
         {
             String name = ((ResourceLocation)blockName).getResourcePath();
@@ -393,7 +392,7 @@ public class MinecraftTypeHelper
             if (is.getItem() instanceof ItemMonsterPlacer)
             {
                 // Special case for eggs:
-                itemParts.add(ItemMonsterPlacer.getNamedIdFrom(is).toString());
+                itemParts.add(ItemMonsterPlacer.getEntityName(is).toString());
             }
             // First part will be "tile" or "item".
             // Second part will be the item itself (eg "dyePowder" or "stainedGlass" etc).
@@ -417,7 +416,7 @@ public class MinecraftTypeHelper
             di.setVariant(var);
         }
         // Use the item registry name for the item - this is what we use in Types.XSD
-        Object obj = Item.REGISTRY.getNameForObject(is.getItem());
+        Object obj = Item.itemRegistry.getNameForObject(is.getItem());
         String publicName;
         if (obj instanceof ResourceLocation)
             publicName = ((ResourceLocation)obj).getResourcePath();
@@ -494,7 +493,7 @@ public class MinecraftTypeHelper
             {
                 // Attempt to find the subtype for this colour/variant - made tricky
                 // because Items don't provide any nice property stuff like Blocks do...
-                NonNullList<ItemStack> subItems = NonNullList.create();
+                List<ItemStack> subItems = new ArrayList<ItemStack>();
                 item.getSubItems(item, null, subItems);
 
                 for (ItemStack is : subItems)
@@ -502,7 +501,7 @@ public class MinecraftTypeHelper
                     String fullName = is.getUnlocalizedName();
                     if (is.getItem() instanceof ItemMonsterPlacer)
                     {
-                        fullName += "." + ItemMonsterPlacer.getNamedIdFrom(is).toString();  // Special handling for eggs
+                        fullName += "." + ItemMonsterPlacer.getEntityName(is).toString();  // Special handling for eggs
                     }
                     String[] parts = fullName.split("\\.");
                     for (int p = 0; p < parts.length; p++)

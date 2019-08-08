@@ -25,20 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockSnow;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.world.World;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.world.BlockEvent.BreakEvent;
-import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
 import com.microsoft.Malmo.MalmoMod;
 import com.microsoft.Malmo.MalmoMod.MalmoMessageType;
 import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldDecorator;
@@ -48,6 +34,21 @@ import com.microsoft.Malmo.Schemas.MissionInit;
 import com.microsoft.Malmo.Schemas.UnnamedGridDefinition;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper.XMLBlockState;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockSnow;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Vec3i;
+import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent.Action;
+import net.minecraftforge.event.world.BlockEvent.BreakEvent;
+import net.minecraftforge.event.world.BlockEvent.PlaceEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class BuildBattleDecoratorImplementation extends HandlerBase implements IWorldDecorator
 {
@@ -277,20 +278,20 @@ public class BuildBattleDecoratorImplementation extends HandlerBase implements I
     @SubscribeEvent
     public void onBreakBlock(BreakEvent event)
     {
-        if (blockInBounds(event.getPos(), this.destBounds))
+        if (blockInBounds(event.pos, this.destBounds))
         {
             this.valid  = false;
-            this.dest.set(blockPosToIndex(event.getPos(), this.destBounds), Blocks.AIR.getDefaultState());
+            this.dest.set(blockPosToIndex(event.pos, this.destBounds), Blocks.air.getDefaultState());
         }
     }
 
     @SubscribeEvent
     public void onPlaceBlock(PlaceEvent event)
     {
-        if (blockInBounds(event.getPos() ,this.destBounds))
+        if (blockInBounds(event.pos ,this.destBounds))
         {
             this.valid = false;
-            this.dest.set(blockPosToIndex(event.getPos(), this.destBounds), event.getState());
+            this.dest.set(blockPosToIndex(event.pos, this.destBounds), event.state);
         }
     }
 
@@ -298,25 +299,25 @@ public class BuildBattleDecoratorImplementation extends HandlerBase implements I
     public void onPlayerInteract(PlayerInteractEvent event)
     {
         // Disallow creating or destroying events in the player structure:
-        if (event instanceof PlayerInteractEvent.LeftClickBlock)
+        if (event.action == Action.LEFT_CLICK_BLOCK)
         {
             // Destroy block
-            if (blockInBounds(event.getPos(), this.sourceBounds))
+            if (blockInBounds(event.pos, this.sourceBounds))
                 event.setCanceled(true);
         }
-        else if (event instanceof PlayerInteractEvent.RightClickBlock)
+        else if (event.action == Action.RIGHT_CLICK_BLOCK)
         {
             // Place block - need to work out *where* the block would be placed.
             // This code was cribbed from ItemBlock.onItemUse()
-            IBlockState iblockstate = event.getWorld().getBlockState(event.getPos());
+            IBlockState iblockstate = event.world.getBlockState(event.pos);
             Block block = iblockstate.getBlock();
-            EnumFacing side = event.getFace();
-            BlockPos pos = event.getPos();
-            if (block == Blocks.SNOW_LAYER && ((Integer)iblockstate.getValue(BlockSnow.LAYERS)).intValue() < 1)
+            EnumFacing side = event.face;
+            BlockPos pos = event.pos;
+            if (block == Blocks.snow_layer && ((Integer)iblockstate.getValue(BlockSnow.LAYERS)).intValue() < 1)
             {
                 side = EnumFacing.UP;
             }
-            else if (!block.isReplaceable(event.getWorld(), pos))
+            else if (!block.isReplaceable(event.world, pos))
             {
                 pos = pos.offset(side);
             }

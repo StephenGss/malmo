@@ -35,7 +35,7 @@ public class RewardForDamagingEntityImplementation extends RewardBase implements
     public void getReward(MissionInit missionInit, MultidimensionalReward reward)
     {
         super.getReward(missionInit, reward);
-        if (missionInit == null || Minecraft.getMinecraft().player == null)
+        if (missionInit == null || Minecraft.getMinecraft().thePlayer == null)
             return;
         synchronized (this.damages)
         {
@@ -67,7 +67,7 @@ public class RewardForDamagingEntityImplementation extends RewardBase implements
     @SubscribeEvent
     public void onLivingAttackEvent(LivingAttackEvent event)
     {
-        if (event.getEntity() == null || event.getSource().getEntity() != Minecraft.getMinecraft().player)
+        if (event.entity == null || event.source.getEntity() != Minecraft.getMinecraft().thePlayer)
             return;
         synchronized (this.damages)
         {
@@ -77,12 +77,12 @@ public class RewardForDamagingEntityImplementation extends RewardBase implements
                 for (EntityTypes et : mob.getType())
                 {
                     String mobName = et.value();
-                    if (event.getEntity().getName().equals(mobName))
+                    if (event.entity.getName().equals(mobName))
                     {
                         if (this.damages.containsKey(mob))
-                            this.damages.put(mob, this.damages.get(mob) + event.getAmount());
+                            this.damages.put(mob, this.damages.get(mob) + event.ammount);
                         else
-                            this.damages.put(mob, event.getAmount());
+                            this.damages.put(mob, event.ammount);
                     }
                 }
             }

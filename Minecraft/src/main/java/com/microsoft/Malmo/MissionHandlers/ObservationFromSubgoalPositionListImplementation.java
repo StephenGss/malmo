@@ -50,7 +50,7 @@ public class ObservationFromSubgoalPositionListImplementation extends HandlerBas
         boolean foundNextPoint = false;
         double targetx = 0;
         double targetz = 0;
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player == null)
             return; // Nothing we can do.
 

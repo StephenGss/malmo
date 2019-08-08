@@ -19,15 +19,15 @@
 
 package com.microsoft.Malmo.MissionHandlers;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.ItemCompass;
-import net.minecraft.util.math.BlockPos;
-
 import com.google.gson.JsonObject;
 import com.microsoft.Malmo.MissionHandlerInterfaces.IObservationProducer;
 import com.microsoft.Malmo.Schemas.MissionInit;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.util.BlockPos;
 
 /**
  * Creates observations from a compass in the agent's inventory.
@@ -38,7 +38,7 @@ public class ObservationFromCompassImplementation extends HandlerBase implements
 	
 	@Override
 	public void writeObservationsToJSON(JsonObject json, MissionInit missionInit) {
-		EntityPlayerSP player = Minecraft.getMinecraft().player;
+		EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 		if (player == null)
 			return;
 
@@ -46,7 +46,7 @@ public class ObservationFromCompassImplementation extends HandlerBase implements
 
 		boolean flag = false;
 		for (int i = 0; i < 41; i++)
-			if (inventory.getStackInSlot(i).getItem() instanceof ItemCompass)
+			if (inventory.getStackInSlot(i).getItem() == Items.compass)
 				flag = true;
 
 		// If there isn't a compass in the player's inventory, can't do anything
@@ -56,7 +56,7 @@ public class ObservationFromCompassImplementation extends HandlerBase implements
 			json.addProperty("set", true);
 
 			// Get world spawn, which is what the compass points at
-			BlockPos spawn = player.world.getSpawnPoint();
+			BlockPos spawn = player.worldObj.getSpawnPoint();
 			json.addProperty("compass-x", spawn.getX());
 			json.addProperty("compass-y", spawn.getY());
 			json.addProperty("compass-z", spawn.getZ());
@@ -80,7 +80,7 @@ public class ObservationFromCompassImplementation extends HandlerBase implements
 			
 			json.addProperty("offset", difference);
 			json.addProperty("normalized-offset", difference - 180);
-			json.addProperty("distance", playerLoc.getDistance(spawn.getX(), spawn.getY(), spawn.getZ()));
+			json.addProperty("distance", playerLoc.distanceSq(spawn.getX(), spawn.getY(), spawn.getZ()));
 		}
 	}
 

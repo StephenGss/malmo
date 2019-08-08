@@ -30,28 +30,6 @@ import java.util.Map;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
-import net.minecraft.entity.EntityList;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.launchwrapper.Launch;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.management.PlayerList;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.GameType;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.Biome.SpawnListEntry;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingSpawnEvent.CheckSpawn;
-import net.minecraftforge.event.world.WorldEvent.PotentialSpawns;
-import net.minecraftforge.fml.common.FMLCommonHandler;
-import net.minecraftforge.fml.common.eventhandler.Event.Result;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
-
 import com.microsoft.Malmo.IState;
 import com.microsoft.Malmo.MalmoMod;
 import com.microsoft.Malmo.MalmoMod.IMalmoMessageListener;
@@ -76,6 +54,28 @@ import com.microsoft.Malmo.Utils.MinecraftTypeHelper;
 import com.microsoft.Malmo.Utils.SchemaHelper;
 import com.microsoft.Malmo.Utils.ScreenHelper;
 import com.microsoft.Malmo.Utils.TimeHelper;
+import com.mojang.realmsclient.gui.ChatFormatting;
+
+import net.minecraft.entity.EntityList;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
+import net.minecraft.launchwrapper.Launch;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.management.ServerConfigurationManager;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldSettings.GameType;
+import net.minecraft.world.biome.BiomeGenBase.SpawnListEntry;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.living.LivingSpawnEvent.CheckSpawn;
+import net.minecraftforge.event.world.WorldEvent.PotentialSpawns;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
+import net.minecraftforge.fml.common.gameevent.TickEvent.ServerTickEvent;
 
 /**
  * Class designed to track and control the state of the mod, especially regarding mission launching/running.<br>
@@ -132,7 +132,7 @@ public class ServerStateMachine extends StateMachine
 
     protected boolean checkWatchList()
     {
-        String[] connected_users = FMLCommonHandler.instance().getMinecraftServerInstance().getOnlinePlayerNames();
+        String[] connected_users = FMLCommonHandler.instance().getMinecraftServerInstance().getAllUsernames();
         if (connected_users.length < this.userConnectionWatchList.size())
             return false;
 
@@ -229,13 +229,13 @@ public class ServerStateMachine extends StateMachine
             if (allowSpawning && sic.getAllowedMobs() != null && !sic.getAllowedMobs().isEmpty())
             {
                 // Spawning is allowed, but restricted to our list:
-                Iterator<SpawnListEntry> it = ps.getList().iterator();
+                Iterator<SpawnListEntry> it = ps.list.iterator();
                 while (it.hasNext())
                 {
                     // Is this on our list?
                     SpawnListEntry sle = it.next();
-                    net.minecraftforge.fml.common.registry.EntityEntry entry = net.minecraftforge.fml.common.registry.EntityRegistry.getEntry(sle.entityClass);
-                    String mobName = entry == null ? null : entry.getName();
+                    net.minecraftforge.fml.common.registry.EntityRegistry.EntityRegistration entry = net.minecraftforge.fml.common.registry.EntityRegistry.instance().lookupModSpawn(sle.entityClass, true);
+                    String mobName = entry == null ? null : entry.getEntityName();
                     boolean allowed = false;
                     for (EntityTypes mob : sic.getAllowedMobs())
                     {
@@ -272,7 +272,7 @@ public class ServerStateMachine extends StateMachine
             {
                 // Spawning is allowed, but restricted to our list.
                 // Is this mob on our list?
-                String mobName = EntityList.getEntityString(cs.getEntity());
+                String mobName = EntityList.getEntityString(cs.entity);
                 allowSpawning = false;
                 for (EntityTypes mob : sic.getAllowedMobs())
                 {
@@ -499,10 +499,10 @@ public class ServerStateMachine extends StateMachine
         {
         	MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
             System.out.println("Mission received: " + missionInit.getMission().getAbout().getSummary());
-            TextComponentString txtMission = new TextComponentString("Received mission: " + TextFormatting.BLUE + missionInit.getMission().getAbout().getSummary());
-            TextComponentString txtSource = new TextComponentString("Source: " + TextFormatting.GREEN + missionInit.getClientAgentConnection().getAgentIPAddress());
-            server.getPlayerList().sendMessage(txtMission);
-            server.getPlayerList().sendMessage(txtSource);
+            ChatComponentText txtMission = new ChatComponentText("Received mission: " + ChatFormatting.BLUE + missionInit.getMission().getAbout().getSummary());
+            ChatComponentText txtSource = new ChatComponentText("Source: " + ChatFormatting.GREEN + missionInit.getClientAgentConnection().getAgentIPAddress());
+            MinecraftServer.getServer().getConfigurationManager().sendChatMsg(txtMission);
+            MinecraftServer.getServer().getConfigurationManager().sendChatMsg(txtSource);
 
             ServerStateMachine.this.currentMissionInit = missionInit;
             // Create the Mission Handlers
@@ -793,7 +793,7 @@ public class ServerStateMachine extends StateMachine
 
         private EntityPlayerMP getPlayerFromUsername(String username)
         {
-            PlayerList scoman = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList();
+        	ServerConfigurationManager scoman = MinecraftServer.getServer().getConfigurationManager();
             EntityPlayerMP player = scoman.getPlayerByUsername(username);
             return player;
         }
@@ -808,8 +808,8 @@ public class ServerStateMachine extends StateMachine
                 if ((player.getHealth() <= 0 || player.isDead || !player.isEntityAlive()))
                 {
                     player.markPlayerActive();
-                    player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().recreatePlayerEntity(player, player.dimension, false);
-                    player.connection.playerEntity = player;
+                    player = MinecraftServer.getServer().getConfigurationManager().recreatePlayerEntity(player, player.dimension, false);
+                    player.playerNetServerHandler.playerEntity = player;
                 }
 
                 // Reset their food and health:
@@ -978,7 +978,7 @@ public class ServerStateMachine extends StateMachine
             ItemStack item = MinecraftTypeHelper.getItemStackFromDrawItem(di);
             if( item != null )
             {
-                item.setCount(obj.getQuantity());
+                item.stackSize = (obj.getQuantity());
             }
             return item;
         }
@@ -1094,7 +1094,7 @@ public class ServerStateMachine extends StateMachine
                 else
                 {
                     // Find the relevant agent; send a message to it.
-                    PlayerList scoman = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList();
+                	ServerConfigurationManager scoman = MinecraftServer.getServer().getConfigurationManager();
                     EntityPlayerMP player = scoman.getPlayerByUsername(nextAgentName);
                     if (player != null)
                     {
@@ -1128,11 +1128,11 @@ public class ServerStateMachine extends StateMachine
             {
                 boolean allowTimeToPass = (sic.getTime().isAllowPassageOfTime() != Boolean.FALSE);  // Defaults to true if unspecified.
                 MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
-                if (server.worlds != null && server.worlds.length != 0)
+                if (server.worldServers != null && server.worldServers.length != 0)
                 {
-                    for (int i = 0; i < server.worlds.length; ++i)
+                    for (int i = 0; i < server.worldServers.length; ++i)
                     {
-                        World world = server.worlds[i];
+                        World world = server.worldServers[i];
                         world.getGameRules().setOrCreateGameRule("doDaylightCycle", allowTimeToPass ? "true" : "false");
                         if (sic.getTime().getStartTime() != null)
                             world.setWorldTime(sic.getTime().getStartTime());
@@ -1155,7 +1155,7 @@ public class ServerStateMachine extends StateMachine
             if (!ServerStateMachine.this.userTurnSchedule.isEmpty())
             {
                 String agentName = ServerStateMachine.this.userTurnSchedule.get(0);
-                PlayerList scoman = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList();
+                ServerConfigurationManager scoman = MinecraftServer.getServer().getConfigurationManager();
                 EntityPlayerMP player = scoman.getPlayerByUsername(agentName);
                 if (player != null)
                 {

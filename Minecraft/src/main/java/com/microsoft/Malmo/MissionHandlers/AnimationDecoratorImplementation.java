@@ -24,11 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-
 import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldDecorator;
 import com.microsoft.Malmo.Schemas.AnimationDecorator;
 import com.microsoft.Malmo.Schemas.AnimationDecorator.Linear;
@@ -36,16 +31,20 @@ import com.microsoft.Malmo.Schemas.MissionInit;
 import com.microsoft.Malmo.Utils.AnimationDrawingHelper;
 import com.microsoft.Malmo.Utils.EvaluationHelper;
 
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+
 /** WorldBuilder that takes a DrawingDecorator object and animates it.<br>
  */
 public class AnimationDecoratorImplementation extends HandlerBase implements IWorldDecorator
 {
     AnimationDecorator params = null;
     AnimationDrawingHelper drawContext = new AnimationDrawingHelper();
-    Vec3d origin;
-    Vec3d velocity;
-    Vec3d minCanvas;
-    Vec3d maxCanvas;
+    Vec3 origin;
+    Vec3 velocity;
+    Vec3 minCanvas;
+    Vec3 maxCanvas;
     int frameCount = 0;
     int tickCounter = 0;
     Random rng;
@@ -62,10 +61,10 @@ public class AnimationDecoratorImplementation extends HandlerBase implements IWo
         if (this.params.getLinear() != null)
         {
             Linear linear = this.params.getLinear();
-            this.origin = new Vec3d(linear.getInitialPos().getX().doubleValue(), linear.getInitialPos().getY().doubleValue(), linear.getInitialPos().getZ().doubleValue());
-            this.velocity = new Vec3d(linear.getInitialVelocity().getX().doubleValue(), linear.getInitialVelocity().getY().doubleValue(), linear.getInitialVelocity().getZ().doubleValue());
-            this.minCanvas = new Vec3d(linear.getCanvasBounds().getMin().getX(), linear.getCanvasBounds().getMin().getY(), linear.getCanvasBounds().getMin().getZ());
-            this.maxCanvas = new Vec3d(linear.getCanvasBounds().getMax().getX(), linear.getCanvasBounds().getMax().getY(), linear.getCanvasBounds().getMax().getZ());
+            this.origin = new Vec3(linear.getInitialPos().getX().doubleValue(), linear.getInitialPos().getY().doubleValue(), linear.getInitialPos().getZ().doubleValue());
+            this.velocity = new Vec3(linear.getInitialVelocity().getX().doubleValue(), linear.getInitialVelocity().getY().doubleValue(), linear.getInitialVelocity().getZ().doubleValue());
+            this.minCanvas = new Vec3(linear.getCanvasBounds().getMin().getX(), linear.getCanvasBounds().getMin().getY(), linear.getCanvasBounds().getMin().getZ());
+            this.maxCanvas = new Vec3(linear.getCanvasBounds().getMax().getX(), linear.getCanvasBounds().getMax().getY(), linear.getCanvasBounds().getMax().getZ());
         }
         else
         {
@@ -82,7 +81,7 @@ public class AnimationDecoratorImplementation extends HandlerBase implements IWo
                 double x = EvaluationHelper.eval(this.params.getParametric().getX(), 0, this.rng);
                 double y = EvaluationHelper.eval(this.params.getParametric().getY(), 0, this.rng);
                 double z = EvaluationHelper.eval(this.params.getParametric().getZ(), 0, this.rng);
-                this.origin = new Vec3d(x, y, z);
+                this.origin = new Vec3(x, y, z);
             }
             catch (Exception e)
             {
@@ -136,7 +135,7 @@ public class AnimationDecoratorImplementation extends HandlerBase implements IWo
                 dy = -dy;
             if (this.drawContext.getMax().zCoord + dz > linear.getCanvasBounds().getMax().getZ() + 1.0 || this.drawContext.getMin().zCoord + dz < linear.getCanvasBounds().getMin().getZ())
                 dz = -dz;
-            this.velocity = new Vec3d(dx, dy, dz);
+            this.velocity = new Vec3(dx, dy, dz);
             this.origin = this.origin.add(this.velocity);
         }
         else
@@ -146,7 +145,7 @@ public class AnimationDecoratorImplementation extends HandlerBase implements IWo
                 double x = EvaluationHelper.eval(this.params.getParametric().getX(), this.frameCount, this.rng);
                 double y = EvaluationHelper.eval(this.params.getParametric().getY(), this.frameCount, this.rng);
                 double z = EvaluationHelper.eval(this.params.getParametric().getZ(), this.frameCount, this.rng);
-                this.origin = new Vec3d(x, y, z);
+                this.origin = new Vec3(x, y, z);
             }
             catch (Exception e)
             {

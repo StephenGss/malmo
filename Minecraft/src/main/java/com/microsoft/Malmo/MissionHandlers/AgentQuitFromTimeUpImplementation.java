@@ -19,13 +19,12 @@
 
 package com.microsoft.Malmo.MissionHandlers;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.util.text.TextComponentString;
-import net.minecraft.util.text.Style;
-import net.minecraft.util.text.TextFormatting;
-
 import com.microsoft.Malmo.Schemas.AgentQuitFromTimeUp;
 import com.microsoft.Malmo.Schemas.MissionInit;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.EnumChatFormatting;
 
 /** IWantToQuit object that returns true when a certain amount of time has elapsed.<br>
  * This object also draws a cheeky countdown on the Minecraft Chat HUD.
@@ -50,19 +49,19 @@ public class AgentQuitFromTimeUpImplementation extends QuitFromTimeUpBase
 	@Override
 	protected long getWorldTime()
 	{
-		return Minecraft.getMinecraft().world.getTotalWorldTime();
+		return Minecraft.getMinecraft().theWorld.getTotalWorldTime();
 	}
 
 	@Override
 	protected void drawCountDown(int secondsRemaining)
 	{
-        TextComponentString text = new TextComponentString("" + secondsRemaining + "...");
-        Style style = new Style();
-        style.setBold(true);
+        ChatComponentText text = new ChatComponentText(EnumChatFormatting.BOLD + "" + secondsRemaining + "...");
+        //Style style = new Style();
+        //style.setBold(true);
         if (secondsRemaining <= 5)
-            style.setColor(TextFormatting.RED);
+        	text = new ChatComponentText(EnumChatFormatting.RED + "" + EnumChatFormatting.BOLD + "" + secondsRemaining + "...");
 
-        text.setStyle(style);
+        //text.setStyle(style);
         Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessageWithOptionalDeletion(text, 1);
 	}
 	

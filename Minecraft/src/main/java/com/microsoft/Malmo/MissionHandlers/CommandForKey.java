@@ -21,12 +21,11 @@ package com.microsoft.Malmo.MissionHandlers;
 
 import java.lang.reflect.Field;
 
+import com.microsoft.Malmo.Schemas.MissionInit;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.client.settings.KeyBindingMap;
-
-import com.microsoft.Malmo.Schemas.MissionInit;
 
 /** KeyBinding subclass which opens up the Minecraft keyhandling to external agents for a particular key.<br>
  * If this class is set to override control, it will prevent the KeyBinding baseclass methods from being called,
@@ -341,18 +340,20 @@ public class CommandForKey extends CommandBase
         Field[] kbfields = KeyBinding.class.getDeclaredFields();
         for (Field f : kbfields)
         {
-            if (f.getType() == KeyBindingMap.class)
+            if (f.getType() == KeyBinding.class)
             {
-                net.minecraftforge.client.settings.KeyBindingMap kbp;
+                KeyBinding kbp;
                 try
                 {
                     f.setAccessible(true);
-                    kbp = (KeyBindingMap) (f.get(null));
-                    // Our new keybinding should already have been added;
-                    // just need to remove the original one.
-                    while (kbp.lookupAll(this.keyHook.getKeyCode()).size() > 1)
-                        kbp.removeKey(this.originalBinding);
-                    return;
+                    KeyBinding kb = (KeyBinding)(f.get(settings));
+                    if (kb != null && kb.getKeyDescription().equals(this.keyDescription))
+                    {
+                        this.originalBinding = kb;
+                        this.keyHook = create(this.originalBinding);
+                        createdHook = true;
+                        f.set(settings, this.keyHook);
+                    }
                 }
                 catch (IllegalArgumentException e)
                 {

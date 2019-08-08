@@ -2,16 +2,16 @@ package com.microsoft.Malmo.MissionHandlers;
 
 import java.util.List;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
-
 import com.microsoft.Malmo.MissionHandlerInterfaces.IWantToQuit;
 import com.microsoft.Malmo.Schemas.AgentQuitFromCatchingMob;
 import com.microsoft.Malmo.Schemas.EntityTypes;
 import com.microsoft.Malmo.Schemas.MissionInit;
 import com.microsoft.Malmo.Schemas.MobWithDescription;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
 
 public class AgentQuitFromCatchingMobImplementation extends HandlerBase implements IWantToQuit
 {
@@ -46,7 +46,7 @@ public class AgentQuitFromCatchingMobImplementation extends HandlerBase implemen
                         {
                             // If global flag is false, our player needs to be adjacent to the mob in order to claim the reward.
                             BlockPos entityPos = new BlockPos(ent.posX, ent.posY, ent.posZ);
-                            EntityPlayerSP player = Minecraft.getMinecraft().player;
+                            EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
                             BlockPos playerPos = new BlockPos(player.posX, player.posY, player.posZ);
                             if (Math.abs(entityPos.getX() - playerPos.getX()) + Math.abs(entityPos.getZ() - playerPos.getZ()) > 1)
                                 continue;

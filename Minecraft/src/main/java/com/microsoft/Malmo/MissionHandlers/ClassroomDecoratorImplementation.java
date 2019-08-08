@@ -25,15 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.block.BlockDoor;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.init.Blocks;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldDecorator;
-import com.microsoft.Malmo.Schemas.AgentHandlers;
 import com.microsoft.Malmo.Schemas.AgentSection;
 import com.microsoft.Malmo.Schemas.ClassroomDecorator;
 import com.microsoft.Malmo.Schemas.Colour;
@@ -44,6 +36,12 @@ import com.microsoft.Malmo.Schemas.Variation;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper.XMLBlockState;
 import com.microsoft.Malmo.Utils.Discrete;
+
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
 
 /**
  * This class provides a decorator that will generate a random building full of rooms, where moving
@@ -1452,65 +1450,65 @@ public class ClassroomDecoratorImplementation extends HandlerBase implements IWo
         
         private void setDungeon()
         {
-            this.floor = Blocks.PLANKS.getDefaultState();
-            this.exterior = Blocks.COBBLESTONE.getDefaultState();
-            this.wall = Blocks.COBBLESTONE.getDefaultState();
-            this.light = Blocks.TORCH.getDefaultState();
-            this.goal = Blocks.GOLD_BLOCK.getDefaultState();
-            this.moat = Blocks.LAVA.getDefaultState();
-            this.moatContainer = Blocks.COBBLESTONE.getDefaultState();
-            this.doorUpper = Blocks.OAK_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.doorLower = Blocks.OAK_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.stairs = Blocks.STONE_STAIRS.getDefaultState();
-            this.stairsPlatform = Blocks.COBBLESTONE.getDefaultState();
-            this.ladder = Blocks.LADDER.getDefaultState();
-            this.puzzleDoorUpper = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.puzzleDoorLower = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.trigger = Blocks.LEVER.getDefaultState();
-            this.platform = Blocks.BOOKSHELF.getDefaultState();
-            this.hint = Blocks.GOLD_ORE.getDefaultState();
+            this.floor = Blocks.planks.getDefaultState();
+            this.exterior = Blocks.cobblestone.getDefaultState();
+            this.wall = Blocks.cobblestone.getDefaultState();
+            this.light = Blocks.torch.getDefaultState();
+            this.goal = Blocks.gold_block.getDefaultState();
+            this.moat = Blocks.lava.getDefaultState();
+            this.moatContainer = Blocks.cobblestone.getDefaultState();
+            this.doorUpper = Blocks.oak_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.doorLower = Blocks.oak_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.stairs = Blocks.stone_stairs.getDefaultState();
+            this.stairsPlatform = Blocks.cobblestone.getDefaultState();
+            this.ladder = Blocks.ladder.getDefaultState();
+            this.puzzleDoorUpper = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.puzzleDoorLower = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.trigger = Blocks.lever.getDefaultState();
+            this.platform = Blocks.bookshelf.getDefaultState();
+            this.hint = Blocks.gold_ore.getDefaultState();
         }
                
         private void setPyramid()
         {
-            this.floor = Blocks.RED_SANDSTONE.getDefaultState();
-            this.exterior = Blocks.SANDSTONE.getDefaultState();
-            this.wall = Blocks.SANDSTONE.getDefaultState();
-            this.light = Blocks.TORCH.getDefaultState();
-            this.goal = Blocks.DIAMOND_BLOCK.getDefaultState();
-            this.moat = Blocks.LAVA.getDefaultState();
-            this.moatContainer = Blocks.SANDSTONE.getDefaultState();
-            this.doorUpper = Blocks.ACACIA_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.doorLower = Blocks.ACACIA_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.stairs = Blocks.SANDSTONE_STAIRS.getDefaultState();
-            this.stairsPlatform = Blocks.SANDSTONE.getDefaultState();
-            this.ladder = Blocks.LADDER.getDefaultState();
-            this.puzzleDoorUpper = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.puzzleDoorLower = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.trigger = Blocks.LEVER.getDefaultState();
-            this.platform = Blocks.RED_SANDSTONE.getDefaultState();
-            this.hint = Blocks.DIAMOND_ORE.getDefaultState();
+            this.floor = Blocks.red_sandstone.getDefaultState();
+            this.exterior = Blocks.sandstone.getDefaultState();
+            this.wall = Blocks.sandstone.getDefaultState();
+            this.light = Blocks.torch.getDefaultState();
+            this.goal = Blocks.diamond_block.getDefaultState();
+            this.moat = Blocks.lava.getDefaultState();
+            this.moatContainer = Blocks.sandstone.getDefaultState();
+            this.doorUpper = Blocks.acacia_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.doorLower = Blocks.acacia_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.stairs = Blocks.sandstone_stairs.getDefaultState();
+            this.stairsPlatform = Blocks.sandstone.getDefaultState();
+            this.ladder = Blocks.ladder.getDefaultState();
+            this.puzzleDoorUpper = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.puzzleDoorLower = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.trigger = Blocks.lever.getDefaultState();
+            this.platform = Blocks.red_sandstone.getDefaultState();
+            this.hint = Blocks.diamond_ore.getDefaultState();
         }
         
         private void setIgloo()
         {
-            this.floor = Blocks.SNOW.getDefaultState();
-            this.exterior = Blocks.SNOW.getDefaultState();
-            this.wall = Blocks.PACKED_ICE.getDefaultState();
-            this.light = Blocks.TORCH.getDefaultState();
-            this.goal = Blocks.REDSTONE_BLOCK.getDefaultState();
-            this.moat = Blocks.WATER.getDefaultState();
-            this.moatContainer = Blocks.GLOWSTONE.getDefaultState();
-            this.doorUpper = Blocks.SPRUCE_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.doorLower = Blocks.SPRUCE_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.stairs = Blocks.SPRUCE_STAIRS.getDefaultState();
-            this.stairsPlatform = Blocks.PACKED_ICE.getDefaultState();
-            this.ladder = Blocks.LADDER.getDefaultState();
-            this.puzzleDoorUpper = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
-            this.puzzleDoorLower = Blocks.IRON_DOOR.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
-            this.trigger = Blocks.LEVER.getDefaultState();
-            this.platform = Blocks.SNOW.getDefaultState();
-            this.hint = Blocks.REDSTONE_ORE.getDefaultState();
+            this.floor = Blocks.snow.getDefaultState();
+            this.exterior = Blocks.snow.getDefaultState();
+            this.wall = Blocks.packed_ice.getDefaultState();
+            this.light = Blocks.torch.getDefaultState();
+            this.goal = Blocks.redstone_block.getDefaultState();
+            this.moat = Blocks.water.getDefaultState();
+            this.moatContainer = Blocks.glowstone.getDefaultState();
+            this.doorUpper = Blocks.spruce_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.doorLower = Blocks.spruce_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.stairs = Blocks.spruce_stairs.getDefaultState();
+            this.stairsPlatform = Blocks.packed_ice.getDefaultState();
+            this.ladder = Blocks.ladder.getDefaultState();
+            this.puzzleDoorUpper = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.UPPER);
+            this.puzzleDoorLower = Blocks.iron_door.getDefaultState().withProperty(BlockDoor.HALF, BlockDoor.EnumDoorHalf.LOWER);
+            this.trigger = Blocks.lever.getDefaultState();
+            this.platform = Blocks.snow.getDefaultState();
+            this.hint = Blocks.redstone_ore.getDefaultState();
         }
     }
 

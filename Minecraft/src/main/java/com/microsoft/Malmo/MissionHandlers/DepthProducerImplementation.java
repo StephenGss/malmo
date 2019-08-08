@@ -7,19 +7,16 @@ import static org.lwjgl.opengl.GL11.glReadPixels;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.util.math.MathHelper;
-
-import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.util.glu.Project;
 
 import com.microsoft.Malmo.MissionHandlerInterfaces.IVideoProducer;
 import com.microsoft.Malmo.Schemas.DepthProducer;
 import com.microsoft.Malmo.Schemas.MissionInit;
-import com.microsoft.Malmo.Schemas.VideoProducer;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.util.MathHelper;
 
 public class DepthProducerImplementation extends HandlerBase implements IVideoProducer
 {

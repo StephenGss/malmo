@@ -121,7 +121,7 @@ class Env:
             step_options - encodes withTurnKey and withInfo in step messages. Defaults to info included,
             turn if required.
         """
-        if action_filter is None:
+        if True:
             action_filter = {"move", "turn", "use", "attack"}
 
         if not xml.startswith('<Mission'):

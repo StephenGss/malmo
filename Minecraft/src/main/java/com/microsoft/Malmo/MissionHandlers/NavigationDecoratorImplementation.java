@@ -29,7 +29,7 @@ import com.microsoft.Malmo.Utils.MinecraftTypeHelper;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.BlockPos;
 import net.minecraft.world.World;
 
 /**
@@ -135,11 +135,11 @@ public class NavigationDecoratorImplementation extends HandlerBase implements IW
 
 	@Override
 	public void update(World world) {
-		if (Minecraft.getMinecraft().player != null) {
-			BlockPos spawn = Minecraft.getMinecraft().player.world.getSpawnPoint();
+		if (Minecraft.getMinecraft().thePlayer != null) {
+			BlockPos spawn = Minecraft.getMinecraft().thePlayer.worldObj.getSpawnPoint();
 			if (spawn.getX() != (int) placementX && spawn.getY() != (int) placementY
 					&& spawn.getZ() != (int) placementZ)
-				Minecraft.getMinecraft().player.world.setSpawnPoint(new BlockPos(placementX, placementY, placementZ));
+				Minecraft.getMinecraft().thePlayer.worldObj.setSpawnPoint(new BlockPos(placementX, placementY, placementZ));
 		}
 	}
 

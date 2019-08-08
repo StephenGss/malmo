@@ -35,7 +35,6 @@ import com.microsoft.Malmo.MissionHandlers.RewardForCollectingItemImplementation
 import com.microsoft.Malmo.MissionHandlers.RewardForDiscardingItemImplementation;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
@@ -55,12 +54,12 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.ShapedRecipes;
 import net.minecraft.item.crafting.ShapelessRecipes;
 import net.minecraft.tileentity.TileEntityFurnace;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.oredict.OreDictionary;
 import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
+import scala.actors.threadpool.Arrays;
 
 public class CraftingHelper
 {
@@ -94,7 +93,7 @@ public class CraftingHelper
         }
         else if (recipe instanceof ShapelessOreRecipe)
         {
-            NonNullList<Object> objs = ((ShapelessOreRecipe)recipe).getInput();
+            List<Object> objs = ((ShapelessOreRecipe)recipe).getInput();
             for (Object o : objs)
             {
                 if (o != null)
@@ -167,7 +166,7 @@ public class CraftingHelper
                 if (destIS != null && sourceIS != null && itemStackIngredientsMatch(destIS, sourceIS))
                 {
                     bFound = true;
-                    destIS.setCount(destIS.getCount() + sourceIS.getCount());
+                    destIS.stackSize = destIS.stackSize + sourceIS.stackSize;
                 }
             }
             if (!bFound)
@@ -184,17 +183,17 @@ public class CraftingHelper
      */
     public static boolean playerHasIngredients(EntityPlayerMP player, List<ItemStack> ingredients)
     {
-        NonNullList<ItemStack> main = player.inventory.mainInventory;
-        NonNullList<ItemStack> arm = player.inventory.armorInventory;
+        List<ItemStack> main = Arrays.asList(player.inventory.mainInventory);
+        List<ItemStack> arm = Arrays.asList(player.inventory.armorInventory);
 
         for (ItemStack isIngredient : ingredients)
         {
-            int target = isIngredient.getCount();
+            int target = isIngredient.stackSize;
             for (int i = 0; i < main.size() + arm.size() && target > 0; i++)
             {
                 ItemStack isPlayer = (i >= main.size()) ? arm.get(i - main.size()) : main.get(i);
                 if (isPlayer != null && isIngredient != null && itemStackIngredientsMatch(isPlayer, isIngredient))
-                    target -= isPlayer.getCount();
+                    target -= isPlayer.stackSize;
             }
             if (target > 0)
                 return false;   // Don't have enough of this.
@@ -226,9 +225,9 @@ public class CraftingHelper
     {
         Integer fromCache = fuelCaches.get(player);
         int total = (fromCache != null) ? fromCache : 0;
-        for (int i = 0; i < player.inventory.mainInventory.size(); i++)
+        for (int i = 0; i < player.inventory.mainInventory.length; i++)
         {
-            ItemStack is = player.inventory.mainInventory.get(i);
+            ItemStack is = player.inventory.mainInventory[i];
             total += TileEntityFurnace.getItemBurnTime(is);
         }
         return total;
@@ -247,30 +246,30 @@ public class CraftingHelper
         else
             fuelCaches.put(player, fuelCaches.get(player) - burnAmount);
         int index = 0;
-        while (fuelCaches.get(player) < 0 && index < player.inventory.mainInventory.size())
+        while (fuelCaches.get(player) < 0 && index < player.inventory.mainInventory.length)
         {
-            ItemStack is = player.inventory.mainInventory.get(index);
+            ItemStack is = player.inventory.mainInventory[index];
             if (is != null)
             {
                 int burnTime = TileEntityFurnace.getItemBurnTime(is);
                 if (burnTime != 0)
                 {
                     // Consume item:
-                    if (is.getCount() > 1)
-                        is.setCount(is.getCount() - 1);
+                    if (is.stackSize > 1)
+                        is.stackSize = (is.stackSize - 1);
                     else
                     {
                         // If this is a bucket of lava, we need to consume the lava but leave the bucket.
-                        if (is.getItem() == Items.LAVA_BUCKET)
+                        if (is.getItem() == Items.lava_bucket)
                         {
                             // And if we're cooking wet sponge, we need to leave the bucket filled with water.
-                            if (input.getItem() == Item.getItemFromBlock(Blocks.SPONGE) && input.getMetadata() == 1)
-                                player.inventory.mainInventory.set(index, new ItemStack(Items.WATER_BUCKET));
+                            if (input.getItem() == Item.getItemFromBlock(Blocks.sponge) && input.getMetadata() == 1)
+                                player.inventory.mainInventory[index] = new ItemStack(Items.water_bucket);
                             else
-                                player.inventory.mainInventory.set(index, new ItemStack(Items.BUCKET));
+                                player.inventory.mainInventory[index] = new ItemStack(Items.bucket);
                         }
                         else
-                            player.inventory.mainInventory.get(index).setCount(0);
+                            player.inventory.mainInventory[index].stackSize = (0);
                         index++;
                     }
                     fuelCaches.put(player, fuelCaches.get(player) + burnTime);
@@ -289,29 +288,29 @@ public class CraftingHelper
      */
     public static void removeIngredientsFromPlayer(EntityPlayerMP player, List<ItemStack> ingredients)
     {
-        NonNullList<ItemStack> main = player.inventory.mainInventory;
-        NonNullList<ItemStack> arm = player.inventory.armorInventory;
+        List<ItemStack> main = Arrays.asList(player.inventory.mainInventory);
+        List<ItemStack> arm = Arrays.asList(player.inventory.armorInventory);
 
         for (ItemStack isIngredient : ingredients)
         {
-            int target = isIngredient.getCount();
+            int target = isIngredient.stackSize;
             for (int i = 0; i < main.size() + arm.size() && target > 0; i++)
             {
                 ItemStack isPlayer = (i >= main.size()) ? arm.get(i - main.size()) : main.get(i);
                 if (isPlayer != null && isIngredient != null && itemStackIngredientsMatch(isPlayer, isIngredient))
                 {
-                    if (target >= isPlayer.getCount())
+                    if (target >= isPlayer.stackSize)
                     {
                         // Consume this stack:
-                        target -= isPlayer.getCount();
+                        target -= isPlayer.stackSize;
                         if (i >= main.size())
-                            arm.get(i - main.size()).setCount(0);
+                            arm.get(i - main.size()).stackSize = (0);
                         else
-                            main.get(i).setCount(0);
+                            main.get(i).stackSize = (0);
                     }
                     else
                     {
-                        isPlayer.setCount(isPlayer.getCount() - target);
+                        isPlayer.stackSize = (isPlayer.stackSize - target);
                         target = 0;
                     }
                 }
@@ -446,19 +445,19 @@ public class CraftingHelper
         OutputStreamWriter osw = new OutputStreamWriter(fos, "utf-8");
         BufferedWriter writer = new BufferedWriter(osw);
         JsonArray itemTypes = new JsonArray();
-        for (ResourceLocation i : Item.REGISTRY.getKeys())
+        for (ResourceLocation i : Item.itemRegistry.getKeys())
         {
-            Item item = Item.REGISTRY.getObject(i);
+            Item item = Item.itemRegistry.getObject(i);
             if (item != null)
             {
                 JsonObject json = new JsonObject();
-                json.addProperty("type", Item.REGISTRY.getNameForObject(item).toString().replace("minecraft:",""));
+                json.addProperty("type", Item.itemRegistry.getNameForObject(item).toString().replace("minecraft:",""));
                 json.addProperty("damageable", item.isDamageable());
                 json.addProperty("rendersIn3D", item.isFull3D());
                 json.addProperty("repairable", item.isRepairable());
                 CreativeTabs tab = item.getCreativeTab();
                 json.addProperty("tab", ((tab != null) ? item.getCreativeTab().getTabLabel() : "none"));
-                ItemStack is = item.getDefaultInstance();
+                ItemStack is = new ItemStack(item);
                 json.addProperty("stackable", is.isStackable());
                 json.addProperty("enchantable", is.isItemEnchantable());
                 json.addProperty("rare", (is.getRarity() == EnumRarity.RARE));    // Enum has four types, but only two (COMMON and RARE) appear to be used.
@@ -474,11 +473,11 @@ public class CraftingHelper
                     Block b = ib.getBlock();
                     IBlockState bs = b.getDefaultState();
                     json.addProperty("slipperiness", b.slipperiness);
-                    json.addProperty("hardness", bs.getBlockHardness(null, null));
-                    json.addProperty("causesSuffocation", bs.causesSuffocation());
-                    json.addProperty("canProvidePower", bs.canProvidePower());
-                    json.addProperty("translucent", bs.isTranslucent());
-                    Material mat = bs.getMaterial();
+                    json.addProperty("hardness", bs.getBlock().getBlockHardness(null, null));
+                    json.addProperty("causesSuffocation", bs.getBlock().isCollidable());	//TODO: Check conversion from blockstate.causessuffocation()
+                    json.addProperty("canProvidePower", bs.getBlock().canProvidePower());
+                    json.addProperty("translucent", bs.getBlock().isTranslucent());
+                    Material mat = bs.getBlock().getMaterial();
                     if (mat != null)
                     {
                         json.addProperty("canBurn", mat.getCanBurn());
@@ -486,11 +485,11 @@ public class CraftingHelper
                         json.addProperty("blocksMovement", mat.blocksMovement());
                         json.addProperty("needsNoTool", mat.isToolNotRequired());
                         json.addProperty("isReplaceable", mat.isReplaceable());
-                        json.addProperty("pistonPushable", mat.getMobilityFlag() == EnumPushReaction.NORMAL);
-                        json.addProperty("woodenMaterial", mat == Material.WOOD);
-                        json.addProperty("ironMaterial", mat == Material.IRON);
-                        json.addProperty("glassyMaterial",  mat == Material.GLASS);
-                        json.addProperty("clothMaterial",  mat == Material.CLOTH);
+                        json.addProperty("pistonPushable", !mat.blocksMovement());
+                        json.addProperty("woodenMaterial", mat == Material.wood);
+                        json.addProperty("ironMaterial", mat == Material.iron);
+                        json.addProperty("glassyMaterial",  mat == Material.glass);
+                        json.addProperty("clothMaterial",  mat == Material.cloth);
                     }
 
                     boolean hasDirection = false;
@@ -498,7 +497,7 @@ public class CraftingHelper
                     boolean hasVariant = false;
                     for (IProperty prop : bs.getProperties().keySet())
                     {
-                        System.out.println(Item.REGISTRY.getNameForObject(item).toString() + " -- " + prop);
+                        System.out.println(Item.itemRegistry.getNameForObject(item).toString() + " -- " + prop);
                         if (prop instanceof PropertyDirection)
                             hasDirection = true;
                         if (prop instanceof PropertyEnum && prop.getName().equals("color"))
@@ -539,7 +538,7 @@ public class CraftingHelper
                 ItemStack is = ((IRecipe)obj).getRecipeOutput();
                 if (is == null)
                     continue;
-                String s = is.getCount() + "x" + is.getUnlocalizedName() + " = ";
+                String s = is.stackSize + "x" + is.getUnlocalizedName() + " = ";
                 List<ItemStack> ingredients = getIngredients((IRecipe)obj);
                 if (ingredients == null)
                     continue;
@@ -548,7 +547,7 @@ public class CraftingHelper
                 {
                     if (!first)
                         s += ", ";
-                    s += isIngredient.getCount() + "x" + isIngredient.getUnlocalizedName();
+                    s += isIngredient.stackSize + "x" + isIngredient.getUnlocalizedName();
                     s += "(" + isIngredient.getDisplayName() + ")";
                     first = false;
                 }
@@ -561,7 +560,7 @@ public class CraftingHelper
         {
             ItemStack isInput = (ItemStack)furnaceIt.next();
             ItemStack isOutput = (ItemStack)FurnaceRecipes.instance().getSmeltingList().get(isInput);
-            String s = isOutput.getCount() + "x" + isOutput.getUnlocalizedName() + " = FUEL + " + isInput.getCount() + "x" + isInput.getUnlocalizedName() + "\n";
+            String s = isOutput.stackSize + "x" + isOutput.getUnlocalizedName() + " = FUEL + " + isInput.stackSize + "x" + isInput.getUnlocalizedName() + "\n";
             writer.write(s);
         }
         writer.close();

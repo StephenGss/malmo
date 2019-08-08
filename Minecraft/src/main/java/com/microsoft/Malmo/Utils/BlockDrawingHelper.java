@@ -54,16 +54,14 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.tileentity.TileEntityLockableLoot;
+import net.minecraft.tileentity.TileEntityLockable;
 import net.minecraft.tileentity.TileEntityMobSpawner;
 import net.minecraft.tileentity.TileEntityNote;
 import net.minecraft.tileentity.TileEntitySign;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.EntityEntry;
 
 /**
  *  The Mission node can specify drawing primitives, which are drawn in the world by this helper class.  
@@ -359,22 +357,9 @@ public class BlockDrawingHelper
      */
     private void DrawPrimitive( DrawEntity e, World w ) throws Exception
     {
-        String oldEntityName = e.getType().getValue();
-        String id = null;
-        for (EntityEntry ent : net.minecraftforge.fml.common.registry.ForgeRegistries.ENTITIES)
-        {
-           if (ent.getName().equals(oldEntityName))
-           {
-               id = ent.getRegistryName().toString();
-               break;
-           }
-        }
-        if (id == null)
-            return;
-
+    	String entityName = e.getType().getValue();
         NBTTagCompound nbttagcompound = new NBTTagCompound();
-        nbttagcompound.setString("id", id);
-        nbttagcompound.setBoolean("PersistenceRequired", true); // Don't let this entity despawn
+        nbttagcompound.setString("id", entityName);
         Entity entity;
         try
         {
@@ -394,7 +379,7 @@ public class BlockDrawingHelper
                     ((EntityLivingBase)entity).renderYawOffset = e.getYaw().floatValue();
                 }
                 w.getBlockState(entity.getPosition());  // Force-load the chunk if necessary, to ensure spawnEntity will work.
-                if (!w.spawnEntity(entity))
+                if (!w.spawnEntityInWorld(entity))
                 {
                     System.out.println("WARNING: Failed to spawn entity! Chunk not loaded?");
                 }
@@ -419,10 +404,10 @@ public class BlockDrawingHelper
         setBlockState(w, pos, blockType );
         // Now fill the container:
         TileEntity tileentity = w.getTileEntity(pos);
-        if (tileentity instanceof TileEntityLockableLoot)
+        if (tileentity instanceof TileEntityLockable)
         {
             // First clear out any leftovers:
-            ((TileEntityLockableLoot)tileentity).clear();
+            ((TileEntityLockable)tileentity).clear();
             int index = 0;
             for (ContainedObjectType cot : c.getObject())
             {
@@ -431,8 +416,8 @@ public class BlockDrawingHelper
                 di.setType(cot.getType());
                 di.setVariant(cot.getVariant());
                 ItemStack stack = MinecraftTypeHelper.getItemStackFromDrawItem(di);
-                stack.setCount(cot.getQuantity());
-                ((TileEntityLockableLoot)tileentity).setInventorySlotContents(index, stack);
+                stack.stackSize=(cot.getQuantity());
+                ((TileEntityLockable)tileentity).setInventorySlotContents(index, stack);
                 index++;
             }
         }
@@ -463,13 +448,13 @@ public class BlockDrawingHelper
         {
             TileEntitySign sign = (TileEntitySign)tileentity;
             if (s.getLine1() != null)
-                sign.signText[0] = new TextComponentString(s.getLine1());
+                sign.signText[0] = new ChatComponentText(s.getLine1());
             if (s.getLine2() != null)
-                sign.signText[1] = new TextComponentString(s.getLine2());
+                sign.signText[1] = new ChatComponentText(s.getLine2());
             if (s.getLine3() != null)
-                sign.signText[2] = new TextComponentString(s.getLine3());
+                sign.signText[2] = new ChatComponentText(s.getLine3());
             if (s.getLine4() != null)
-                sign.signText[3] = new TextComponentString(s.getLine4());
+                sign.signText[3] = new ChatComponentText(s.getLine4());
         }
     }
 
@@ -491,7 +476,7 @@ public class BlockDrawingHelper
         entityitem.motionY = 0;
         entityitem.motionZ = 0;
         entityitem.setDefaultPickupDelay();
-        world.spawnEntity(entityitem);
+        world.spawnEntityInWorld(entityitem);
     }
 
     protected EntityItem createItem(ItemStack stack, double x, double y, double z, World w, boolean centreItem)
@@ -580,7 +565,7 @@ public class BlockDrawingHelper
                 try
                 {
                     EntityTypes entvar = EntityTypes.fromValue(state.variant.getValue());
-                    ((TileEntityMobSpawner)te).getSpawnerBaseLogic().setEntityId(new ResourceLocation(entvar.value()));
+                    ((TileEntityMobSpawner)te).getSpawnerBaseLogic().setEntityName(entvar.value());
                 }
                 catch (Exception e)
                 {

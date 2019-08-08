@@ -22,6 +22,8 @@ if (Should-Install "Git version")
     }
 }
 
+Install-Java
+
 # Install CMake:
 if (Should-Install "CMake")
 {
@@ -48,7 +50,7 @@ Install-Python3
 if ($env:path -notmatch "doxygen")
 {
     Display-Heading "Installing doxygen"
-    Invoke-WebRequest "http://doxygen.nl/files/doxygen-1.8.15.windows.x64.bin.zip" -OutFile ($env:HOMEPATH + "\temp\doxygen.zip")
+    Download-File "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.13.windows.x64.bin.zip" ($env:HOMEPATH + "\temp\doxygen.zip")
     & 'C:\Program Files\7-Zip\7z.exe' x .\temp\doxygen.zip -oC:\doxygen
     if ($?)
     {

@@ -22,7 +22,7 @@ public class ObservationFromHumanImplementation extends HandlerBase implements I
         
         ObservationEvent()
         {
-        	this.timestamp = Minecraft.getMinecraft().world.getWorldTime();
+        	this.timestamp = Minecraft.getMinecraft().theWorld.getWorldTime();
         }
     }
 

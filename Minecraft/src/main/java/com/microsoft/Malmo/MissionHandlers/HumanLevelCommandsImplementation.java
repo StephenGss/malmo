@@ -115,7 +115,8 @@ public class HumanLevelCommandsImplementation extends CommandGroup
 
                     // Correct any errors from last mouse move:
                     if (this.isOverriding())
-                        mc.player.turn(this.targetYawDelta,  this.targetPitchDelta);
+                        mc.thePlayer.setPositionAndRotation(mc.thePlayer.getPosition().getX(), mc.thePlayer.getPosition().getY(), mc.thePlayer.getPosition().getZ(), 
+                        		this.targetYawDeltaDelta, this.targetPitchDeltaDelta);
                     int renderTicksPerClientTick = this.clientTickMonitor.getEventsPerSecond() >= 1 ? (int)Math.ceil(this.renderTickMonitor.getEventsPerSecond() / this.clientTickMonitor.getEventsPerSecond()) : 0;
                     renderTicksPerClientTick = Math.max(1, renderTicksPerClientTick);
                     this.targetYawDelta = f2;
@@ -127,9 +128,9 @@ public class HumanLevelCommandsImplementation extends CommandGroup
                 if (z != 0)
                 {
                     // Code based on Minecraft.runTickMouse
-                    if (!Minecraft.getMinecraft().player.isSpectator() && this.isOverriding())
+                    if (!Minecraft.getMinecraft().thePlayer.isSpectator() && this.isOverriding())
                     {
-                        Minecraft.getMinecraft().player.inventory.changeCurrentItem(z);
+                        Minecraft.getMinecraft().thePlayer.inventory.changeCurrentItem(z);
                     }
                 }
                 return true;
@@ -182,12 +183,13 @@ public class HumanLevelCommandsImplementation extends CommandGroup
             this.renderTickMonitor.beat();
             if (this.isOverriding())
             {
-                EntityPlayerSP player = Minecraft.getMinecraft().player;
+                EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
                 if (player != null)
                 {
                     if (this.targetPitchDelta != 0 || this.targetYawDelta != 0)
                     {
-                        player.turn(this.targetYawDeltaDelta, this.targetPitchDeltaDelta);
+                        player.setPositionAndRotation(player.getPosition().getX(), player.getPosition().getY(), player.getPosition().getZ(), 
+                        		this.targetYawDeltaDelta, this.targetPitchDeltaDelta);
                         this.targetYawDelta -= this.targetYawDeltaDelta;
                         this.targetPitchDelta -= this.targetPitchDeltaDelta;
                         if (this.targetYawDelta / this.targetYawDeltaDelta < 1.0)

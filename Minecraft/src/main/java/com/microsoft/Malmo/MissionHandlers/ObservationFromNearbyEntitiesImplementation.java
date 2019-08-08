@@ -60,10 +60,10 @@ public class ObservationFromNearbyEntitiesImplementation extends HandlerBase imp
     {
         this.tickCount++;
 
-        EntityPlayerSP player = Minecraft.getMinecraft().player;
+        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
 
         // Get all the currently loaded entities:
-        List<?> entities = Minecraft.getMinecraft().world.getLoadedEntityList();
+        List<?> entities = Minecraft.getMinecraft().theWorld.getLoadedEntityList();
 
         // Get the list of RangeDefinitions that need firing:
         List<RangeDefinition> rangesToFire = new ArrayList<RangeDefinition>();
@@ -119,7 +119,7 @@ public class ObservationFromNearbyEntitiesImplementation extends HandlerBase imp
                     jsent.addProperty("y", e.posY);
                     jsent.addProperty("z", e.posZ);
                     jsent.addProperty("pitch", e.rotationPitch);
-                    jsent.addProperty("id", e.getCachedUniqueIdString());
+                    jsent.addProperty("id", e.getEntityId());
                     jsent.addProperty("motionX", e.motionX);
                     jsent.addProperty("motionY", e.motionY);
                     jsent.addProperty("motionZ", e.motionZ);
@@ -136,7 +136,7 @@ public class ObservationFromNearbyEntitiesImplementation extends HandlerBase imp
                             if (di.getVariant() != null)
                                 jsent.addProperty("variation",  di.getVariant().getValue());
                         }
-                        jsent.addProperty("quantity", is.getCount());
+                        jsent.addProperty("quantity", is.stackSize);
                     }
                     else if (e instanceof EntityLivingBase)
                     {

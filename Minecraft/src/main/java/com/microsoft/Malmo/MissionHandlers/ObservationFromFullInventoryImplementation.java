@@ -33,9 +33,9 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityEnderChest;
-import net.minecraft.tileentity.TileEntityLockableLoot;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.tileentity.TileEntityLockable;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -101,9 +101,9 @@ public class ObservationFromFullInventoryImplementation extends ObservationFromS
             IInventory foreignInv = null;
             if (irm.pos() != null)
             {
-                TileEntity te = player.world.getTileEntity(irm.pos());
-                if (te instanceof TileEntityLockableLoot)
-                    foreignInv = (TileEntityLockableLoot)te;
+                TileEntity te = player.worldObj.getTileEntity(irm.pos());
+                if (te instanceof TileEntityLockable)
+                    foreignInv = (TileEntityLockable)te;
                 else if (te instanceof TileEntityEnderChest)
                     foreignInv = player.getInventoryEnderChest();
             }
@@ -177,7 +177,7 @@ public class ObservationFromFullInventoryImplementation extends ObservationFromS
         for (int i = 0; i < inventory.getSizeInventory(); i++)
         {
             ItemStack is = inventory.getStackInSlot(i);
-            if (is != null && !is.isEmpty())
+            if (is != null && is.stackSize!=0)
             {
                 JsonObject jobj = new JsonObject();
                 DrawItem di = MinecraftTypeHelper.getDrawItemFromItemStack(is);
@@ -188,7 +188,7 @@ public class ObservationFromFullInventoryImplementation extends ObservationFromS
                     jobj.addProperty("variant", di.getVariant().getValue());
                 jobj.addProperty("type", name);
                 jobj.addProperty("index", i);
-                jobj.addProperty("quantity", is.getCount());
+                jobj.addProperty("quantity", is.stackSize);
                 jobj.addProperty("inventory",  invName);
                 arr.add(jobj);
             }
@@ -203,7 +203,7 @@ public class ObservationFromFullInventoryImplementation extends ObservationFromS
             ItemStack is = inventory.getStackInSlot(i);
             if (is != null)
             {
-                json.addProperty(prefix + i + "_size", is.getCount());
+                json.addProperty(prefix + i + "_size", is.stackSize);
                 DrawItem di = MinecraftTypeHelper.getDrawItemFromItemStack(is);
                 String name = di.getType();
                 if (di.getColour() != null)
@@ -230,9 +230,9 @@ public class ObservationFromFullInventoryImplementation extends ObservationFromS
     @Override
     public ObservationRequestMessage createObservationRequestMessage()
     {
-        RayTraceResult rtr = Minecraft.getMinecraft().objectMouseOver;
+        MovingObjectPosition rtr = Minecraft.getMinecraft().objectMouseOver;
         BlockPos pos = null;
-        if (rtr != null && rtr.typeOfHit == RayTraceResult.Type.BLOCK)
+        if (rtr != null && rtr.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
         {
             pos = rtr.getBlockPos();
         }

@@ -25,12 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-
 import com.microsoft.Malmo.MissionHandlerInterfaces.IWorldDecorator;
 import com.microsoft.Malmo.Schemas.AgentQuitFromReachingPosition;
 import com.microsoft.Malmo.Schemas.AgentSection;
@@ -48,6 +42,11 @@ import com.microsoft.Malmo.Schemas.Variation;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper;
 import com.microsoft.Malmo.Utils.BlockDrawingHelper.XMLBlockState;
 import com.microsoft.Malmo.Utils.MinecraftTypeHelper;
+
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.BlockPos;
+import net.minecraft.world.World;
 
 public class MazeDecoratorImplementation extends HandlerBase implements IWorldDecorator
 {
@@ -495,7 +494,7 @@ public class MazeDecoratorImplementation extends HandlerBase implements IWorldDe
                     int cellindex = cellx + cellz * width;
                     if (cellindex < 0 || cellindex >= grid.length || grid[cellindex] == null)
                         walkable = false;
-                    if (walkable && gapHeight > optimalPathHeight && !gapBlock.getBlock().getDefaultState().equals(Blocks.AIR.getDefaultState()))
+                    if (walkable && gapHeight > optimalPathHeight && !gapBlock.getBlock().getDefaultState().equals(Blocks.air.getDefaultState()))
                     {
                         // The "gaps" are in fact walls, so we need to be a bit more conservative with our path, since the
                         // player has a width of 0.4 cells. We do this in a very unsophisticated, brute-force manor by testing
